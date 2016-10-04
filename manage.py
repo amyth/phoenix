@@ -2,6 +2,7 @@
 import os
 import sys
 
+
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     try:
@@ -19,4 +20,14 @@ if __name__ == "__main__":
                 "forget to activate a virtual environment?"
             )
         raise
+
+    ## Connect to mongo
+    try:
+        import mongoengine
+        from django.conf import settings
+
+        mongoengine.connect(settings.MONGO_SETTINGS['database'])
+    except ImportError:
+        raise ImportError("Couldn't import mongoengine.")
+
     execute_from_command_line(sys.argv)
