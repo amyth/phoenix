@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Mon Oct  3 15:39:00 2016
+# @last_modify: Thu Oct  6 09:48:54 2016
 ##
 ########################################
 
@@ -15,10 +15,13 @@
 import datetime
 import mongoengine
 
+from apps.campaigns.documents import Campaign
+from apps.users.documents import User, Recruiter
+
 
 class Message(mongoengine.Document):
 
-    sender = mongoengine.ReferenceField(User, required=True, dbref=True)
+    sender = mongoengine.ReferenceField(Recruiter, dbref=True)
     recipient = mongoengine.ReferenceField(User, required=True, dbref=True)
     campaign = mongoengine.ReferenceField(Campaign, required=True, dbref=True)
 
@@ -36,7 +39,7 @@ class Message(mongoengine.Document):
 
     def to_json(self):
         data = self.to_mongo()
-        data["sender"] = {"email": self.sender.email, "uid": self.sender.uid}
+        data["sender"] = {"uid": self.sender.uid}
         data["recipient"] = {
                 "email": self.recipient.email,
                 "uid": self.recipient.uid
