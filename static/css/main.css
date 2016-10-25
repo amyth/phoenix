@@ -1,0 +1,163 @@
+footer {
+    border-top: 1px solid #ddd;
+    margin-top: 25px;
+    padding: 25px 0;
+}
+footer .info {
+    font-size: 1rem;
+    text-align: center;
+    color: #b7b7b7;
+}
+footer .typicons-heart {
+    font-size: 1.2rem;
+    vertical-align: -webkit-baseline-middle;
+    color: #ff6f88;
+}
+.centered-form-wrapper {
+    text-align: center;
+    margin-top: 100px;
+}
+.centered-form-wrapper .phoenix-icon {
+	position: absolute;
+    top: -48px;
+    left: 50%;
+    margin-left: -42.5px;
+    padding: 10px;
+    background: white;
+}
+.centered-form-wrapper .phoenix-icon img {
+    width: 65px;
+    height: auto;
+    background: white;
+    margin-bottom: -10px;
+}
+.centered-form-wrapper .login-form {
+	margin: 0 auto;
+    border-radius: 0.5em;
+    border: 1px solid #ddd;
+    display: block;
+    padding: 30px;
+	padding-top: 60px;
+	max-width: 340px;
+}
+.centered-form-wrapper .button,
+.centered-form-wrapper input {
+	width: 100%;
+}
+.smaller-text {
+	font-size: 0.75em;
+}
+.gray {
+	color: #b9b9b9;
+}
+.red {
+	color: #ff0000;
+}
+.uppercase {
+	text-transform: uppercase;
+}
+.form-errors ul,
+.form-errors li {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.main-info {
+    margin: 0 auto;
+    margin-top: 35px;
+}
+.form-container input {
+    width: 100%;
+}
+.main-info .columns {
+    text-align: center;
+    background: #f9f9f9;
+    padding: 20px 0;
+    border-radius: 3px;
+}
+.main-info .columns:hover {
+    background: #fdfdfd;
+}
+.main-info .header-info {
+    color: #bbb;
+    text-transform: uppercase;
+}
+.main-info .num {
+    font-weight: bold;
+    font-size: 2.5rem;
+}
+#logo-area {
+    text-align: center;
+    padding: 15px 0;
+}
+#logo-area img {
+    width: 52px;
+    height: auto;
+}
+.tags {
+    margin: 20px 0;
+}
+.tags .tag {
+    cursor: pointer;
+    background: #ddd;
+    padding: 7px 20px 7px 12px;
+    border-radius: 3px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #666;
+	position: relative;
+    margin-right: 4px;
+}
+.tags.toremove .tag {
+    background: #cbe7f3;
+    color: #7997bf;
+}
+.tags .tag span {
+    margin-top: 5px;
+    position: absolute;
+    right: 6px;
+    top: 1.5px
+}
+.twitter-typeahead {
+	width: 100%;
+}
+.tt-menu {
+	top: 40px !important;
+	background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+	width: 100%;
+}
+.tt-menu .tt-suggestion {
+	padding: 10px 15px;
+	border-bottom: 1px solid#ddd;
+	color: #9b9b9b;
+}
+.tt-menu .tt-suggestion .tt-highlight {
+	color: black;
+}
+.tt-menu .tt-suggestion:hover {
+	background: #eee;
+}
+.tt-menu .tt-suggestion:last-child {
+	border-bottom:none;
+}
+
+/*** messages **/
+ul.messages {
+    list-style:none;
+}
+
+ul.messages li {
+    padding: 15px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+
+}
+
+ul.messages li.error {
+	background: #ffd2d2;
+    border: 1px solid #ffb6b6;
+    color: #ec8686;
+}

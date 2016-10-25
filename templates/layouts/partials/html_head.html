@@ -1,0 +1,17 @@
+{% load static from staticfiles %}
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Phoenix (FSATv2){% endblock title %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/normalize.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/skeleton.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/fonts.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/pikaday.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+
+    <script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/typeahead.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/pikaday.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+</head>

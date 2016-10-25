@@ -1,0 +1,95 @@
+{% extends 'layouts/base.html' %}
+{% load static from staticfiles %}
+
+
+{% block content %}
+<div class="container">
+    <div id="logo-area">
+        <a href="/">
+            <img src="{% static 'images/phoenix.png' %}" />
+        </a>
+    </div>
+    <!-- messages -->
+    <div class="row">
+		{% if messages %}
+		<ul class="messages">
+			{% for message in messages %}
+			<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+    </div>
+
+    <div class="main-info row">
+        {% for cat in main_data %}
+            <div class="four columns">
+                {% for item, nums in cat.iteritems %}
+                <div class="header-info">
+                    {{ item }}
+                </div>
+                <div class="num">
+                    {{ nums }}
+                </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="form-container">
+        <div class="campaigns toadd tags u-cf">
+            {% for campaign in campaigns %}
+            <span class="tag">{{ campaign.name }}<span class="typicons-plus"></span></span>
+            {% endfor %}
+        </div>
+        <div class="campaigns toremove tags u-cf">
+            {% for campaign in selected_data.selected %}
+            <span class="tag">{{ campaign }}<span class="typicons-times"></span></span>
+            {% endfor %}
+        </div>
+        <form id="search_form" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="selected" id="selected" {% if selected_data.selected %}value="{{ selected_data.selected|join:"," }}"{% endif %}/>
+            <input type="text" name="query" id="query" placeholder="Type campaign name and select from the dropdown. e.g. dailyjobalert" />
+            <script type="text/javascript">
+                var getCampaigns = new Bloodhound({
+                    datumTokenizer: function (datum) {
+                        return Bloodhound.tokenizers.whitespace(datum.name);
+                    },
+                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                    remote: {
+                        url: '/j/campaigns?query=%QUERY',
+                        wildcard: '%QUERY'
+                    }
+                });
+                $('form input#query').typeahead({
+                    displayKey: 'name',
+                    hint: true,
+                    highlight: true,
+                    minLength: 2,
+                },{
+                    name: 'campaign-ta-list',
+                    display: 'name',
+                    source: getCampaigns
+                });
+            </script>
+            <div class="row">
+                <div class="six columns">
+                    <input type="text" name="start_date" id="start_date" placeholder="Select a start date" {% if selected_data.start_date %}value="{{selected_data.start_date}}"{% endif %}/>
+                </div>
+                <div class="six columns">
+                    <input type="text" name="end_date" id="end_date" placeholder="Select the end date" {% if selected_data.end_date %}value="{{selected_data.end_date}}"{% endif %}/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve columns">
+                    <input type="text" name="sent_by" id="sent_by" placeholder="Enter sent by uid" {% if selected_data.sent_by %}value="{{selected_data.sent_by}}"{% endif %}/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="four columns">
+                    <button type="submit" class="button button-primary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

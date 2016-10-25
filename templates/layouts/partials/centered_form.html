@@ -1,0 +1,21 @@
+<form method="POST">
+    <div class="smaller-text uppercase form-errors">
+    {% if form.errors %}
+        {% for key, error in form.errors.iteritems %}
+        <div class="red"><p>{{ error }}</p></div>
+        {% endfor %}
+    {% else %}
+        <p class="gray">You need to login to phoenix before you can get the insight on the secure log data. Please enter the credentials below and click access.</p>
+    {% endif %}
+    </div>
+
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="row">
+        {{ field }}
+    </div>
+    {% endfor %}
+    <div class="row">
+        <button type="submit" class="button button-primary">Access</button>
+    </div>
+</form>

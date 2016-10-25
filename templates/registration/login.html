@@ -1,0 +1,21 @@
+{% load static from staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+    {% include 'layouts/partials/html_head.html' %}
+    <body>
+        <div class="background">
+            <div class="container">
+                <div class="centered-form-wrapper">
+                    <div class="phoenix-icon">
+                        <img src="{% static 'images/phoenix.png' %}" />
+                    </div>
+                    <div class="login-form">
+                        {% include 'layouts/partials/centered_form.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    {% include 'layouts/partials/footer.html' %}
+</html>
