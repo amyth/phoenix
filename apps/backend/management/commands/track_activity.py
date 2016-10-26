@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 06-10-2016
-# @last_modify: Thu Oct 13 15:47:36 2016
+# @last_modify: Wed Oct 26 13:50:38 2016
 ##
 ########################################
 
@@ -29,7 +29,7 @@ class Command(BaseCommand):
     help = "Tracks the mail opens through the log files."
 
     def handle(self, *args, **kwargs):
-        #self.import_files()
+        self.import_files()
         self.track_opens()
         self.track_clicks()
 

@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 06-10-2016
-# @last_modify: Mon Oct 10 14:17:18 2016
+# @last_modify: Wed Oct 26 13:50:52 2016
 ##
 ########################################
 
@@ -25,7 +25,7 @@ class Command(BaseCommand):
     help = "Downloads and parses the sent mail logs"
 
     def handle(self, *args, **kwargs):
-        #self.import_files()
+        self.import_files()
         files = self.get_log_files()
         for f in files:
             parser = MailLogParser(filepath=f)
