@@ -129,3 +129,9 @@ MONGO_SETTINGS = {
 
 LOG_DATA_DIR = "/data/logs"
 LOGIN_URL = "/login/"
+
+try:
+	import mongoengine
+	mongoengine.connect(MONGO_SETTINGS['database'])
+except ImportError:
+	raise ImportError("Couldn't import mongoengine.")

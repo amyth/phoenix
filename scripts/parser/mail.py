@@ -19,10 +19,12 @@ import subprocess
 import urlparse
 import uuid
 
+from mongoengine.errors import NotUniqueError
+
 from .core import BaseLogFileParser
 from apps.campaigns.documents import Campaign
 from apps.messages.documents import Message
-from apps.users.documents import User
+from apps.users.documents import User, Recruiter
 
 
 class MailLogParser(BaseLogFileParser):
@@ -187,16 +189,19 @@ class MailLogParser(BaseLogFileParser):
             if not recruiter:
                 recruiter = Recruiter.objects.create(uid=recruiter_id)
 
-        if 'campaign_id' in data:
-            campaign = Campaign.objects.filter(name=data.get('campaign'),
-                    cid=data.get('campaign_id')).first()
-            if not campaign:
-                campaign = Campaign.objects.create(name=data.get('campaign'),
-                        cid=data.get('campaign_id'))
-        else:
-            campaign = Campaign.objects.filter(name=data.get('campaign')).first()
-            if not campaign:
-                campaign = Campaign.objects.create(name=data.get('campaign'))
+	try:
+		if 'campaign_id' in data:
+		    campaign = Campaign.objects.filter(name=data.get('campaign'),
+			    cid=data.get('campaign_id')).first()
+		    if not campaign:
+			campaign = Campaign.objects.create(name=data.get('campaign'),
+				cid=data.get('campaign_id'))
+		else:
+		    campaign = Campaign.objects.filter(name=data.get('campaign')).first()
+		    if not campaign:
+			campaign = Campaign.objects.create(name=data.get('campaign'))
+	except NotUniqueError:
+		campaign = Campaign.objects.get(name=data.get('campaign'))
 
         message = Message.objects.create(recipient=recipient, sender=recruiter,
                 campaign=campaign, sent_at=sent_at)
