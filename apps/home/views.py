@@ -11,6 +11,8 @@
 ##
 ########################################
 
+import datetime
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
@@ -34,7 +36,10 @@ class IndexView(TemplateView):
             context['main_data'] = self.get_numbers(sdate=sdate, edate=edate,
                     cams=cams, uid=uid)
         else:
+	    selected_data = {}
             context["main_data"] = self.get_numbers()
+       	    selected_data['start_date'] = (timezone.now() + timezone.timedelta(days=-1)).strftime('%a %b %d %Y')
+	    context['selected_data'] = selected_data
         context["campaigns"] = Campaign.objects.all()
 
         return context
@@ -43,7 +48,7 @@ class IndexView(TemplateView):
         results = []
         messages = base_messages = Message.objects.all()
 
-        sdate = self.format_date(sdate) if sdate else (timezone.now() + timezone.timedelta(days=-1)).replace(hour=0, minute=0, second=0)
+        sdate = self.format_date(sdate) if sdate else datetime.datetime.now() + datetime.timedelta(days=-1)
         edate = self.format_date(edate) if edate else None
 
         if cams:
@@ -52,7 +57,11 @@ class IndexView(TemplateView):
 
         if sdate:
             if not edate:
-                base_messages = base_messages.filter(sent_at=sdate)
+		sdate = timezone.datetime.strptime(sdate.strftime('%D'), '%m/%d/%y')
+		start_time = sdate.replace(hour=0, minute=0, second=0)
+		end_time = sdate.replace(hour=23, minute=59, second=59)
+                base_messages = base_messages.filter(sent_at__gte=start_time,
+			sent_at__lte=end_time)
             else:
                 base_messages = base_messages.filter(sent_at__gte=sdate,
                         sent_at__lte=edate)
