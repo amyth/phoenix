@@ -43,7 +43,7 @@ class IndexView(TemplateView):
         results = []
         messages = base_messages = Message.objects.all()
 
-        sdate = self.format_date(sdate) if sdate else timezone.now() + timezone.timedelta(days=-1)
+        sdate = self.format_date(sdate) if sdate else (timezone.now() + timezone.timedelta(days=-1)).replace(hour=0, minute=0, second=0)
         edate = self.format_date(edate) if edate else None
 
         if cams:

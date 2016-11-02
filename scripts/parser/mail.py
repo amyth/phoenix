@@ -73,7 +73,7 @@ class MailLogParser(BaseLogFileParser):
         ## create primary data file
         primary = "%s.log" % uuid.uuid4().__str__()
         primary = os.path.join(self.data_directory, primary)
-        os.system('head -5000 %s | grep %s > %s' % (
+        os.system('cat %s | grep %s > %s' % (
             self.filepath, self.primary_tag, primary
         ))
         self.primary_data_file = primary
@@ -81,7 +81,7 @@ class MailLogParser(BaseLogFileParser):
         ## create recruiter data file
         recruiter = "%s.log" % uuid.uuid4().__str__()
         recruiter = os.path.join(self.data_directory, recruiter)
-        os.system('head -5000 %s | grep %s > %s' % (
+        os.system('cat %s | grep %s > %s' % (
             self.filepath, self.recruiter_tag, recruiter
         ))
         self.recruiter_data_file = recruiter
@@ -89,7 +89,7 @@ class MailLogParser(BaseLogFileParser):
         ## create confirmation data file
         confirm = "%s.log" % uuid.uuid4().__str__()
         confirm = os.path.join(self.data_directory, confirm)
-        os.system('head -5000 %s | grep %s > %s' % (
+        os.system('cat %s | grep %s > %s' % (
             self.filepath, self.confirm_tag, confirm
         ))
         self.sent_data_file = confirm
