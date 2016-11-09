@@ -19,6 +19,7 @@ import subprocess
 import urlparse
 import uuid
 
+from mongoengine import Q
 from mongoengine.errors import NotUniqueError
 
 from .core import BaseLogFileParser
@@ -48,11 +49,12 @@ class MailLogParser(BaseLogFileParser):
 
         #Regular expressions
         self.date_regex = r'\w{3}\s+\d{1,2}'
-        self.sender_regex = r'from=<([\w\d@.-_]+)\>'
-        self.recipient_regex = r'to=<([\w\d@.-_]+)\>'
+        self.sender_regex = r'from=<([\w\d@\.\-\_\/\+]+)\>'
+        self.recipient_regex = r'to=<([\w\d@\.\-\_\/\+]+)\>'
         self.mid_regex = r'\w+\/\w+\[[\w\d]+\]\:\s+([\w\d]+)'
         self.campaign_regex = r'[\wd]+-[\w\d]+:\s+([\w\d]+)'
         self.xuid_regex = r'[\wd]+-[\w\d]+:\s+([\w\d\-|]+)'
+	self.mongo_list = []
 
         self.log_file = open(self.filepath, 'r')
 
@@ -103,8 +105,7 @@ class MailLogParser(BaseLogFileParser):
 
         except Exception as err:
             ## Log the error with data
-            print str(err)
-            pass
+            print line, str(err)
 
     def _parse_message_info(self, line):
         data = {}
@@ -127,20 +128,22 @@ class MailLogParser(BaseLogFileParser):
             self.data[message_id] = data
         except Exception as err:
             ## Log the error with data
-            print str(err)
-            pass
+            print line, str(err)
 
     def _get_recruiter_info(self, line):
-        message_id = re.findall(self.mid_regex, line)[0]
-        if message_id in self.data:
-            data = self.data.get(message_id)
-            xuid = re.findall(self.xuid_regex, line)[0]
-            xuid = xuid.split("|")
-            campaign_id = xuid[1]
-            recruiter_id = xuid[-1]
-            data["campaign_id"] = campaign_id
-            data["recruiter_id"] = recruiter_id
-            self.data[message_id] = data
+	try:
+		message_id = re.findall(self.mid_regex, line)[0]
+		if message_id in self.data:
+		    data = self.data.get(message_id)
+		    xuid = re.findall(self.xuid_regex, line)[0]
+		    xuid = xuid.split("|")
+		    campaign_id = xuid[1]
+		    recruiter_id = xuid[-1]
+		    data["campaign_id"] = campaign_id
+		    data["recruiter_id"] = recruiter_id
+		    self.data[message_id] = data
+	except Exception as err:
+		print line, str(err)
 
 
     def parse_lines(self):
@@ -150,7 +153,6 @@ class MailLogParser(BaseLogFileParser):
 
         with open(self.primary_data_file, 'r') as pd_file:
             for line in pd_file.readlines():
-                print line
                 self._parse_message_info(line)
 
         with open(self.recruiter_data_file, 'r') as rec_file:
@@ -166,8 +168,11 @@ class MailLogParser(BaseLogFileParser):
         if self.log_file:
             self._prepare()
             self.parse_lines()
+	    self._insert()
             self._cleanup()
 
+    def _insert(self):
+	Message.objects.insert(self.mongo_list)
 
     def push_to_mongo(self, mid):
 
@@ -183,11 +188,12 @@ class MailLogParser(BaseLogFileParser):
             recipient = User.objects.create(email=data.get('recipient'))
 
 
-        if 'recruiter_id' in data:
+        if ('recruiter_id' in data) or ('sender' in data):
             recruiter_id = data.get('recruiter_id')
-            recruiter = Recruiter.objects.filter(uid=recruiter_id).first()
+	    sender = data.get('sender')
+            recruiter = Recruiter.objects(Q(uid=recruiter_id) | Q(email=sender)).first()
             if not recruiter:
-                recruiter = Recruiter.objects.create(uid=recruiter_id)
+                recruiter = Recruiter.objects.create(uid=recruiter_id, email=sender)
 
 	try:
 		if 'campaign_id' in data:
@@ -203,10 +209,11 @@ class MailLogParser(BaseLogFileParser):
 	except NotUniqueError:
 		campaign = Campaign.objects.get(name=data.get('campaign'))
 
-        message = Message.objects.create(recipient=recipient, sender=recruiter,
+        message = Message(recipient=recipient, sender=recruiter,
                 campaign=campaign, sent_at=sent_at)
 
         self.data.pop(mid)
+	self.mongo_list.append(message)
 
 
 class OpenLogParser(BaseLogFileParser):

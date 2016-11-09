@@ -44,12 +44,14 @@ class Command(BaseCommand):
         for f in files:
             parser = OpenLogParser(filepath=f)
             parser.parse()
+	    os.remove(f)
 
     def track_clicks(self):
         files = self.get_click_log_files()
         for f in files:
             parser = ClickLogParser(filepath=f)
             parser.parse()
+	    os.remove(f)
 
     def get_open_log_files(self):
         """

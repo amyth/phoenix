@@ -25,11 +25,16 @@ class Command(BaseCommand):
     help = "Downloads and parses the sent mail logs"
 
     def handle(self, *args, **kwargs):
-        self.import_files()
+        #self.import_files()
         files = self.get_log_files()
         for f in files:
+	    if f.endswith('.gz'):
+		script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
+		subprocess.call([script, f])
+		f = f[:-3]
             parser = MailLogParser(filepath=f)
             parser.parse()
+	    os.remove(f)
 
         print "All done"
 

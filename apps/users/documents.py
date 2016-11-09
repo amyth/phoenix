@@ -26,5 +26,5 @@ class User(mongoengine.Document):
 
 class Recruiter(mongoengine.Document):
 
-    uid = mongoengine.StringField(required=True, unique=True)
+    uid = mongoengine.StringField()
     email = mongoengine.StringField()

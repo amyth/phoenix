@@ -8,7 +8,7 @@ tmpFile="/data/mail.log"
 
 
 logServer="172.22.65.10"
-netMagicSMTPLogFileOrg="/var/log/smtp/mail.log-"${Yesterday}
+netMagicSMTPLogFileOrg="/var/log/smtp/mail.log-"${Yesterday}"*"
 amazonSMTPLogFileOrg=$(ssh -l root ${logServer} "ls -tr /awssmtplogs/maillog* | tail -n 1")
 
 # copy from log server
