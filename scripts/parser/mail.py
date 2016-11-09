@@ -7,12 +7,13 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Fri Oct 14 00:39:05 2016
+# @last_modify: Wed Nov  9 15:18:05 2016
 ##
 ########################################
 
 
 import datetime
+from multiprocessing.dummy import Pool
 import os
 import re
 import subprocess
@@ -32,7 +33,7 @@ class MailLogParser(BaseLogFileParser):
 
     def __init__(self, data_directory="/tmp", primary_tag="X-MailerTag",
             confirm_tag="removed", recruiter_tag="X-Uid",
-            date_format="%b %d %Y", filepath="",
+            date_format="%b %d %Y", filepath="", workers=4,
             *args, **kwargs):
 
         self.data = {}
@@ -55,6 +56,7 @@ class MailLogParser(BaseLogFileParser):
         self.campaign_regex = r'[\wd]+-[\w\d]+:\s+([\w\d]+)'
         self.xuid_regex = r'[\wd]+-[\w\d]+:\s+([\w\d\-|]+)'
 	self.mongo_list = []
+        self.pool = Pool(workers)
 
         self.log_file = open(self.filepath, 'r')
 
@@ -152,17 +154,22 @@ class MailLogParser(BaseLogFileParser):
         """
 
         with open(self.primary_data_file, 'r') as pd_file:
-            for line in pd_file.readlines():
-                self._parse_message_info(line)
+            lines = pd_file.readlines()
+            self.pool.map(self._parse_message_info, lines)
+            self.pool.close()
+            self.pool.join()
 
         with open(self.recruiter_data_file, 'r') as rec_file:
-            for line in rec_file.readlines():
-                self._get_recruiter_info(line)
+            lines = rec_file.readlines()
+            self.pool.map(self._get_recruiter_info, lines)
+            self.pool.close()
+            self.pool.join()
 
         with open(self.sent_data_file, 'r') as co_file:
-            for line in co_file.readlines():
-                self._confirm_send(line)
-
+            lines = co_file.readlines()
+            self.pool.map(self._confirm_send, lines)
+            self.pool.close()
+            self.pool.join()
 
     def parse(self):
         if self.log_file:
@@ -219,7 +226,7 @@ class MailLogParser(BaseLogFileParser):
 class OpenLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            *args, **kwargs):
+            workers=4, *args, **kwargs):
 
         self.filepath = filepath
         self.data = []
@@ -230,6 +237,7 @@ class OpenLogParser(BaseLogFileParser):
         self.qs_regex = r'/media/images/dot.gif\?([\w\d=&.@]+)'
 
         self.log_file = open(self.filepath, 'r')
+        self.pool = Pool(workers)
 
     def parse(self):
         if self.log_file:
@@ -241,10 +249,14 @@ class OpenLogParser(BaseLogFileParser):
         Parses a single line of log provided.
         """
 
-        for line in self.log_file.readlines():
-            self._parse_message_info(line)
+        lines = self.log_file.readlines()
+        self.pool.map(self._parse_message_info, lines)
+        self.pool.close()
+        self.pool.join()
 
-        self.update_open_status()
+        self.pool.map(self.update_open_status, self.data)
+        self.pool.close()
+        self.pool.join()
 
     def get_normalized_email(email):
         if '@' in email:
@@ -278,26 +290,24 @@ class OpenLogParser(BaseLogFileParser):
             ## Log the error with data
             pass
 
-    def update_open_status(self):
-        for obj in self.data:
+    def update_open_status(self, obj):
+        if 'campaign_id' in obj:
+            campaign = Campaign.objects.filter(name=obj.get('campaign'),
+                    cid=obj.get('campaign_id')).first()
+        else:
+            campaign = Campaign.objects.filter(name=obj.get('campaign')).first()
 
-            if 'campaign_id' in obj:
-                campaign = Campaign.objects.filter(name=obj.get('campaign'),
-                        cid=obj.get('campaign_id')).first()
-            else:
-                campaign = Campaign.objects.filter(name=obj.get('campaign')).first()
+        cdate = obj.get('cdate')
+        email = obj.get('email')
 
-            cdate = obj.get('cdate')
-            email = obj.get('email')
-
-            user = User.objects.filter(email=email).first()
-            message = Message.objects.filter(campaign=campaign, recipient=user,
-                    sent_at=cdate)
-            if message:
-                message.opened = True
-                message.opened_at = datetime.datetime.strptime(
-                        obj.get('open_date'), self.date_format)
-                message.save()
+        user = User.objects.filter(email=email).first()
+        message = Message.objects.filter(campaign=campaign, recipient=user,
+                sent_at=cdate)
+        if message:
+            message.opened = True
+            message.opened_at = datetime.datetime.strptime(
+                    obj.get('open_date'), self.date_format)
+            message.save()
 
 
 
@@ -305,7 +315,7 @@ class ClickLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
             primary_tag="etm_content.*utm_camp|utm_camp.*etmcontent",
-            *args, **kwargs):
+            workers=4, *args, **kwargs):
 
         self.filepath = filepath
         self.data = []
@@ -319,6 +329,7 @@ class ClickLogParser(BaseLogFileParser):
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?]+)'
 
         self.log_file = open(self.filepath, 'r')
+        self.pool = Pool(workers)
 
     def _cleanup(self):
         super(ClickLogParser, self)._cleanup()
@@ -349,11 +360,14 @@ class ClickLogParser(BaseLogFileParser):
         """
 
         with open(self.primary_data_file, 'r') as pd_file:
-            for line in pd_file.readlines():
-                self._parse_message_info(line)
+            lines = pd_file.readlines()
+            self.pool.map(self._parse_message_info, lines)
+            self.pool.close()
+            self.pool.join()
 
-        self.update_click_status()
-
+        self.pool.map(self.update_click_status, self.data)
+        self.pool.close()
+        self.pool.join()
 
     def get_normalized_email(self, cont):
         cont = cont.split("|")
@@ -396,23 +410,22 @@ class ClickLogParser(BaseLogFileParser):
             ## Log the error with data
             pass
 
-    def update_click_status(self):
+    def update_click_status(self, obj):
 
-        for obj in self.data:
-            if 'campaign_id' in obj:
-                campaign = Campaign.objects.filter(name=obj.get('campaign'),
-                        cid=obj.get('campaign_id')).first()
-            else:
-                campaign = Campaign.objects.filter(name=obj.get('campaign')).first()
+        if 'campaign_id' in obj:
+            campaign = Campaign.objects.filter(name=obj.get('campaign'),
+                    cid=obj.get('campaign_id')).first()
+        else:
+            campaign = Campaign.objects.filter(name=obj.get('campaign')).first()
 
-            cdate = obj.get('cdate')
-            email = obj.get('email')
+        cdate = obj.get('cdate')
+        email = obj.get('email')
 
-            user = User.objects.filter(email=email).first()
-            message = Message.objects.filter(campaign=campaign, recipient=user,
-                    sent_at=cdate)
-            if message:
-                message.clicked = True
-                message.clicked_at = datetime.datetime.strptime(
-                        obj.get('click_date'), self.date_format)
-                message.save()
+        user = User.objects.filter(email=email).first()
+        message = Message.objects.filter(campaign=campaign, recipient=user,
+                sent_at=cdate)
+        if message:
+            message.clicked = True
+            message.clicked_at = datetime.datetime.strptime(
+                    obj.get('click_date'), self.date_format)
+            message.save()
