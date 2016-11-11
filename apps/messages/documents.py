@@ -15,15 +15,16 @@
 import datetime
 import mongoengine
 
-from apps.campaigns.documents import Campaign
-from apps.users.documents import User, Recruiter
-
 
 class Message(mongoengine.Document):
 
-    sender = mongoengine.ReferenceField(Recruiter, dbref=True)
-    recipient = mongoengine.ReferenceField(User, required=True, dbref=True)
-    campaign = mongoengine.ReferenceField(Campaign, required=True, dbref=True)
+    message_id = mongoengine.StringField(dbref=True)
+    sender = mongoengine.StringField(dbref=True)
+    sender_uid = mongoengine.StringField(dbref=True)
+    recipient = mongoengine.StringField(dbref=True)
+    campaign = mongoengine.StringField(dbref=True)
+    campaign_uid = mongoengine.StringField(dbref=True)
+    reply_to = mongoengine.StringField(dbref=True)
 
     ## Analytical attributes
     opened = mongoengine.BooleanField(default=False)
@@ -41,7 +42,7 @@ class Message(mongoengine.Document):
         data = self.to_mongo()
         data["sender"] = {"uid": self.sender.uid}
         data["recipient"] = {
-                "email": self.recipient.email,
-                "uid": self.recipient.uid
+                "email": self.recipient,
+                "uid": self.recipient_uid
         }
-        data["campaign"] = {"name": self.campaign.name}
+        data["campaign"] = {"name": self.campaign, "uid": self.campaign_uid}

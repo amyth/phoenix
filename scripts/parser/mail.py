@@ -17,6 +17,7 @@ from multiprocessing.dummy import Pool
 import os
 import re
 import subprocess
+import time
 import urlparse
 import uuid
 
@@ -33,7 +34,7 @@ class MailLogParser(BaseLogFileParser):
 
     def __init__(self, data_directory="/tmp", primary_tag="X-MailerTag",
             confirm_tag="removed", recruiter_tag="X-Uid",
-            date_format="%b %d %Y", filepath="", workers=4,
+            date_format="%b %d %Y", filepath="", workers=8, checkpoint=10000,
             *args, **kwargs):
 
         self.data = {}
@@ -47,6 +48,8 @@ class MailLogParser(BaseLogFileParser):
         self.sent_data_file = None
         self.recruiter_data_file = None
         self.date_format = date_format
+	self.checkpoint = checkpoint
+	self.inserting = False
 
         #Regular expressions
         self.date_regex = r'\w{3}\s+\d{1,2}'
@@ -56,7 +59,11 @@ class MailLogParser(BaseLogFileParser):
         self.campaign_regex = r'[\wd]+-[\w\d]+:\s+([\w\d]+)'
         self.xuid_regex = r'[\wd]+-[\w\d]+:\s+([\w\d\-|]+)'
 	self.mongo_list = []
-        self.pool = Pool(workers)
+	self.recruiter_list = []
+	self.user_list = []
+        self.workers = workers
+	self.ptotal = 0
+	self.pcount = 0
 
         self.log_file = open(self.filepath, 'r')
 
@@ -98,13 +105,14 @@ class MailLogParser(BaseLogFileParser):
         ))
         self.sent_data_file = confirm
 
-
     def _confirm_send(self, line):
         try:
             message_id = re.findall(self.mid_regex, line)[0]
             if message_id in self.data:
                 self.push_to_mongo(message_id)
 
+	    self.ccount += 1
+	    print "%d/%d" % (self.ccount, self.ctotal)
         except Exception as err:
             ## Log the error with data
             print line, str(err)
@@ -128,12 +136,15 @@ class MailLogParser(BaseLogFileParser):
             data["recipient"] = re.findall(self.recipient_regex, line)[0]
             data["campaign"] = re.findall(self.campaign_regex, line)[0]
             self.data[message_id] = data
+	    self.pcount += 1
+	    print "%d/%d" % (self.pcount, self.ptotal)
         except Exception as err:
             ## Log the error with data
             print line, str(err)
 
     def _get_recruiter_info(self, line):
 	try:
+		pass
 		message_id = re.findall(self.mid_regex, line)[0]
 		if message_id in self.data:
 		    data = self.data.get(message_id)
@@ -144,6 +155,8 @@ class MailLogParser(BaseLogFileParser):
 		    data["campaign_id"] = campaign_id
 		    data["recruiter_id"] = recruiter_id
 		    self.data[message_id] = data
+		    self.rcount += 1
+		    print "%d/%d" % (self.rcount, self.rtotal)
 	except Exception as err:
 		print line, str(err)
 
@@ -153,23 +166,35 @@ class MailLogParser(BaseLogFileParser):
         Parses a single line of log provided.
         """
 
+	print "Parsing primary data\n"
         with open(self.primary_data_file, 'r') as pd_file:
             lines = pd_file.readlines()
-            self.pool.map(self._parse_message_info, lines)
-            self.pool.close()
-            self.pool.join()
+	    self.ptotal = len(lines)
+	    self.pcount = 0
+	    pool = Pool(self.workers)
+            pool.map(self._parse_message_info, lines)
+	    pool.terminate()
 
+	print "Parsing recruiter data\n"
         with open(self.recruiter_data_file, 'r') as rec_file:
-            lines = rec_file.readlines()
-            self.pool.map(self._get_recruiter_info, lines)
-            self.pool.close()
-            self.pool.join()
+            rlines = rec_file.readlines()
+	    self.rtotal = len(rlines)
+	    self.rcount = 0
+	    for line in rlines:
+		self._get_recruiter_info(line)
+	    rpool = Pool(self.workers)
+            rpool.map(self._get_recruiter_info, rlines)
+	    rpool.terminate()
 
+	print "Processing ... \n"
         with open(self.sent_data_file, 'r') as co_file:
-            lines = co_file.readlines()
-            self.pool.map(self._confirm_send, lines)
-            self.pool.close()
-            self.pool.join()
+            clines = co_file.readlines()
+	    self.ctotal = len(clines)
+	    self.ccount = 0
+	    cpool = Pool(self.workers)
+            cpool.map(self._confirm_send, clines)
+	    cpool.terminate()
+	return None
 
     def parse(self):
         if self.log_file:
@@ -177,50 +202,33 @@ class MailLogParser(BaseLogFileParser):
             self.parse_lines()
 	    self._insert()
             self._cleanup()
+	return None
 
     def _insert(self):
-	Message.objects.insert(self.mongo_list)
+	self.inserting = True
+	if self.mongo_list:
+	    print "Inserting message objects"
+    	    Message.objects.insert(self.mongo_list)
+	    self.mongo_list = []
+	self.inserting = False
 
     def push_to_mongo(self, mid):
 
-        campaign = None
-        recruiter = None
-        data = self.data.get(mid)
-        recipient = User.objects.filter(email=data.get('recipient')).first()
-        sent_at = datetime.datetime.strptime(data.get('sent_at'),
-                self.date_format)
+	if (len(self.mongo_list) > self.checkpoint) and not self.inserting:
+		self._insert()
+	else:
+            data = self.data.get(mid)
+            message = Message(
+	    		message_id=mid,
+	    		sender=data.get('sender'),
+	    		sender_uid=data.get('recruiter_id'),
+	    		recipient=data.get('recipient'),
+	                    campaign=data.get('campaign'),
+	    		campaign_uid=data.get('campaign_uid'),
+	    		sent_at=data.get('sent_at'))
 
-        ## create objects if does not exist
-        if not recipient:
-            recipient = User.objects.create(email=data.get('recipient'))
-
-
-        if ('recruiter_id' in data) or ('sender' in data):
-            recruiter_id = data.get('recruiter_id')
-	    sender = data.get('sender')
-            recruiter = Recruiter.objects(Q(uid=recruiter_id) | Q(email=sender)).first()
-            if not recruiter:
-                recruiter = Recruiter.objects.create(uid=recruiter_id, email=sender)
-
-	try:
-		if 'campaign_id' in data:
-		    campaign = Campaign.objects.filter(name=data.get('campaign'),
-			    cid=data.get('campaign_id')).first()
-		    if not campaign:
-			campaign = Campaign.objects.create(name=data.get('campaign'),
-				cid=data.get('campaign_id'))
-		else:
-		    campaign = Campaign.objects.filter(name=data.get('campaign')).first()
-		    if not campaign:
-			campaign = Campaign.objects.create(name=data.get('campaign'))
-	except NotUniqueError:
-		campaign = Campaign.objects.get(name=data.get('campaign'))
-
-        message = Message(recipient=recipient, sender=recruiter,
-                campaign=campaign, sent_at=sent_at)
-
-        self.data.pop(mid)
-	self.mongo_list.append(message)
+            self.data.pop(mid)
+	    self.mongo_list.append(message)
 
 
 class OpenLogParser(BaseLogFileParser):
@@ -237,7 +245,7 @@ class OpenLogParser(BaseLogFileParser):
         self.qs_regex = r'/media/images/dot.gif\?([\w\d=&.@]+)'
 
         self.log_file = open(self.filepath, 'r')
-        self.pool = Pool(workers)
+        self.workers = workers
 
     def parse(self):
         if self.log_file:
@@ -250,13 +258,15 @@ class OpenLogParser(BaseLogFileParser):
         """
 
         lines = self.log_file.readlines()
-        self.pool.map(self._parse_message_info, lines)
-        self.pool.close()
-        self.pool.join()
+        pool = Pool(self.workers)
+        pool.map(self._parse_message_info, lines)
+        pool.close()
+        pool.join()
 
-        self.pool.map(self.update_open_status, self.data)
-        self.pool.close()
-        self.pool.join()
+        pool = Pool(self.workers)
+        pool.map(self.update_open_status, self.data)
+        pool.close()
+        pool.join()
 
     def get_normalized_email(email):
         if '@' in email:
@@ -329,7 +339,7 @@ class ClickLogParser(BaseLogFileParser):
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?]+)'
 
         self.log_file = open(self.filepath, 'r')
-        self.pool = Pool(workers)
+        self.workers = workers
 
     def _cleanup(self):
         super(ClickLogParser, self)._cleanup()
@@ -361,13 +371,16 @@ class ClickLogParser(BaseLogFileParser):
 
         with open(self.primary_data_file, 'r') as pd_file:
             lines = pd_file.readlines()
-            self.pool.map(self._parse_message_info, lines)
-            self.pool.close()
-            self.pool.join()
+	    pool = Pool(self.workers)
+            pool.map(self._parse_message_info, lines)
+            pool.close()
+            pool.join()
 
-        self.pool.map(self.update_click_status, self.data)
-        self.pool.close()
-        self.pool.join()
+
+        pool = Pool(self.workers)
+        pool.map(self.update_click_status, self.data)
+        pool.close()
+        pool.join()
 
     def get_normalized_email(self, cont):
         cont = cont.split("|")
