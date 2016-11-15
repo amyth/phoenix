@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 06-10-2016
-# @last_modify: Wed Oct 26 13:50:38 2016
+# @last_modify: Tue Nov 15 19:24:02 2016
 ##
 ########################################
 
@@ -18,7 +18,6 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from scripts.parser.mail import (
-        MailLogParser,
         OpenLogParser,
         ClickLogParser
 )
@@ -29,7 +28,7 @@ class Command(BaseCommand):
     help = "Tracks the mail opens through the log files."
 
     def handle(self, *args, **kwargs):
-        self.import_files()
+        #self.import_files()
         self.track_opens()
         self.track_clicks()
 
@@ -49,9 +48,10 @@ class Command(BaseCommand):
     def track_clicks(self):
         files = self.get_click_log_files()
         for f in files:
+            print f
             parser = ClickLogParser(filepath=f)
             parser.parse()
-	    os.remove(f)
+	    #os.remove(f)
 
     def get_open_log_files(self):
         """
