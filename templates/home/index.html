@@ -81,7 +81,12 @@
             </div>
             <div class="row">
                 <div class="twelve columns">
-                    <input type="text" name="sent_by" id="sent_by" placeholder="Enter sent by uid" {% if selected_data.sent_by %}value="{{selected_data.sent_by}}"{% endif %}/>
+                    <input type="text" name="camp_id" id="camp_id" placeholder="Enter unique campaign id" {% if selected_data.camp_id %}value="{{selected_data.camp_id}}"{% endif %}/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve columns">
+                    <input type="text" name="sent_by" id="sent_by" placeholder="Enter recruiter ID" {% if selected_data.sent_by %}value="{{selected_data.sent_by}}"{% endif %}/>
                 </div>
             </div>
             <div class="row">
