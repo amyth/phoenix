@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Wed Nov 16 13:58:20 2016
+# @last_modify: Wed Nov 16 17:05:28 2016
 ##
 ########################################
 
@@ -204,14 +204,8 @@ class MailLogParser(BaseLogFileParser):
             for camp, camp_obj in date_obj.iteritems():
                 for rec, rec_obj in camp_obj.iteritems():
                     for cid, cid_obj in rec_obj.iteritems():
-                        print {
-                            'date': date,
-                            'campaign': camp,
-                            'campaign_id': cid,
-                            'sent': cid_obj.get('sent')
-                        }
-                       obj = RecruiterMessages(recruiter=rec,
-                                date=date,
+                        obj = RecruiterMessages(recruiter=rec,
+                                date=self.get_date_object(date),
                                 campaign=camp,
                                 campaign_id=cid,
                                 sent=cid_obj.get('sent', 0)
@@ -272,7 +266,6 @@ class OpenLogParser(BaseLogFileParser):
         lines = self.log_file.readlines()
         self.total = len(lines)
         self.prog = 0
-        print self.total
         for line in lines:
             self._parse_message_info(line)
 
@@ -289,14 +282,14 @@ class OpenLogParser(BaseLogFileParser):
         return camp
 
     def get_normalized_cdate(self, cdate):
-        return datetime.datetime.strptime(cdate, '%Y%m%d')
+        return datetime.datetime.strptime(cdate, '%Y%m%d').strftime('%b %d %Y')
 
     def _parse_message_info(self, line):
         try:
             data = {}
             qs_string = re.findall(self.qs_regex, line)[0]
             qs = urlparse.parse_qs(qs_string)
-            cdate = qs.get('utm_campdt')[0]
+            cdate = self.get_normalized_cdate(qs.get('utm_campdt')[0])
             campaign = self.get_normalized_campaign(qs.get('utm_camp')[0])
             campaign_id = 'nocampaignid'
             recruiter_id = 'norecruiterid'
@@ -333,7 +326,7 @@ class OpenLogParser(BaseLogFileParser):
                 for rec, rec_obj in camp_obj.iteritems():
                     for cid, cid_obj in rec_obj.iteritems():
                         message = RecruiterMessages.objects.filter(
-                                date=cdate,
+                                date=self.get_date_object(date),
                                 campaign=camp,
                                 recruiter=rec,
                                 campaign_id=cid
@@ -418,7 +411,7 @@ class ClickLogParser(BaseLogFileParser):
         cont = cont.split("|")
         cdate = cont[2]
         cdate = re.findall(r'[\d]{4}\-[\d]{1,2}\-[\d]{1,2}', cdate)[0]
-        return datetime.datetime.strptime(cdate, '%Y-%m-%d').strftime('%Y%m%d')
+        return datetime.datetime.strptime(cdate, '%Y-%m-%d').strftime('%b %d %Y')
 
     def _parse_message_info(self, line):
         data = {}
@@ -465,7 +458,7 @@ class ClickLogParser(BaseLogFileParser):
                 for rec, rec_obj in camp_obj.iteritems():
                     for cid, cid_obj in rec_obj.iteritems():
                         message = RecruiterMessages.objects.filter(
-                                date=cdate,
+                                date=self.get_date_object(date),
                                 campaign=camp,
                                 recruiter=rec,
                                 campaign_id=cid
@@ -473,4 +466,3 @@ class ClickLogParser(BaseLogFileParser):
                         if message:
                             message.clicked = cid_obj.get('clicked')
                             message.save()
-
