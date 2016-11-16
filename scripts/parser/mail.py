@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Tue Nov 15 20:01:09 2016
+# @last_modify: Wed Nov 16 13:58:20 2016
 ##
 ########################################
 
@@ -200,27 +200,26 @@ class MailLogParser(BaseLogFileParser):
 
     def _insert(self):
         print "Inserting message objects"
-        print self.mongo_data
-        #for date, date_obj in self.mongo_data.iteritems():
-        #    for camp, camp_obj in date_obj.iteritems():
-        #        for rec, rec_obj in camp_obj.iteritems():
-        #            for cid, cid_obj in rec_obj.iteritems():
-        #                print {
-        #                    'date': date,
-        #                    'campaign': camp,
-        #                    'campaign_id': cid,
-        #                    'sent': cid_obj.get('sent')
-        #                }
-        #               obj = RecruiterMessages(recruiter=rec,
-        #                        date=date,
-        #                        campaign=camp,
-        #                        campaign_id=cid,
-        #                        sent=cid_obj.get('sent', 0)
-        #                        )
-        #                self.final_data.append(obj)
+        for date, date_obj in self.mongo_data.iteritems():
+            for camp, camp_obj in date_obj.iteritems():
+                for rec, rec_obj in camp_obj.iteritems():
+                    for cid, cid_obj in rec_obj.iteritems():
+                        print {
+                            'date': date,
+                            'campaign': camp,
+                            'campaign_id': cid,
+                            'sent': cid_obj.get('sent')
+                        }
+                       obj = RecruiterMessages(recruiter=rec,
+                                date=date,
+                                campaign=camp,
+                                campaign_id=cid,
+                                sent=cid_obj.get('sent', 0)
+                                )
+                        self.final_data.append(obj)
 
-        #self.mongo_data = {}
-        #RecruiterMessages.objects.insert(self.final_data)
+        self.mongo_data = {}
+        RecruiterMessages.objects.insert(self.final_data)
 
     def push_to_mongo(self, mid):
 
@@ -329,20 +328,19 @@ class OpenLogParser(BaseLogFileParser):
 
     def update_open_status(self):
         print "Updating opened status\n"
-        print self.data
-        #for date, obj in self.data.iteritems():
-        #    for camp, camp_obj in obj.iteritems():
-        #        for rec, rec_obj in camp_obj.iteritems():
-        #            for cid, cid_obj in rec_obj.iteritems():
-        #                message = RecruiterMessages.objects.filter(
-        #                        date=cdate,
-        #                        campaign=camp,
-        #                        recruiter=rec,
-        #                        campaign_id=cid
-        #                        ).first()
-        #                if message:
-        #                    message.opened = cid_obj.get('opened')
-        #                    message.save()
+        for date, obj in self.data.iteritems():
+            for camp, camp_obj in obj.iteritems():
+                for rec, rec_obj in camp_obj.iteritems():
+                    for cid, cid_obj in rec_obj.iteritems():
+                        message = RecruiterMessages.objects.filter(
+                                date=cdate,
+                                campaign=camp,
+                                recruiter=rec,
+                                campaign_id=cid
+                                ).first()
+                        if message:
+                            message.opened = cid_obj.get('opened')
+                            message.save()
 
 
 class ClickLogParser(BaseLogFileParser):
@@ -462,18 +460,17 @@ class ClickLogParser(BaseLogFileParser):
 
     def update_click_status(self):
         print "Updating click status\n"
-        print self.data
-        #for date, obj in self.data.iteritems():
-        #    for camp, camp_obj in obj.iteritems():
-        #        for rec, rec_obj in camp_obj.iteritems():
-        #            for cid, cid_obj in rec_obj.iteritems():
-        #                message = RecruiterMessages.objects.filter(
-        #                        date=cdate,
-        #                        campaign=camp,
-        #                        recruiter=rec,
-        #                        campaign_id=cid
-        #                        ).first()
-        #                if message:
-        #                    message.clicked = cid_obj.get('clicked')
-        #                    message.save()
+        for date, obj in self.data.iteritems():
+            for camp, camp_obj in obj.iteritems():
+                for rec, rec_obj in camp_obj.iteritems():
+                    for cid, cid_obj in rec_obj.iteritems():
+                        message = RecruiterMessages.objects.filter(
+                                date=cdate,
+                                campaign=camp,
+                                recruiter=rec,
+                                campaign_id=cid
+                                ).first()
+                        if message:
+                            message.clicked = cid_obj.get('clicked')
+                            message.save()
 
