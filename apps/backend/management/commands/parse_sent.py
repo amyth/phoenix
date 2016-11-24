@@ -24,8 +24,25 @@ class Command(BaseCommand):
 
     help = "Downloads and parses the sent mail logs"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--date',
+            action='store',
+            dest='date',
+            default='',
+            help='SMTP log file date'
+        )
+        parser.add_argument(
+            '--amz_date',
+            action='store',
+            dest='amz_date',
+            default='',
+            help='Amazon log file date'
+        )
+
     def handle(self, *args, **kwargs):
-        self.import_files()
+
+        self.import_files(**kwargs)
         files = self.get_log_files()
         for f in files:
 	    if f.endswith('.gz'):
@@ -38,9 +55,17 @@ class Command(BaseCommand):
 
         print "All done"
 
-    def import_files(self):
-        script = os.path.join(settings.BASE_DIR, "scripts/bash/import_mail.sh")
-        subprocess.call([script])
+    def import_files(self, **kwargs):
+	_date = kwargs.get('date')
+	_amz = kwargs.get('amz_date')
+
+	script_comm = "scripts/bash/import_mail.sh"
+        script = os.path.join(settings.BASE_DIR, script_comm)
+	if (_date and _amz):
+	    script_list = [script, _date, _amz]
+	else:
+	    script_list = [script]
+        subprocess.call(script_list)
 
     def get_log_files(self):
         """

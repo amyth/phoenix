@@ -220,7 +220,7 @@ class MailLogParser(BaseLogFileParser):
         data = self.data.get(mid)
         date = data.get('sent_at')
         campaign = data.get('campaign', 'nocampaign')
-        campaign_id = data.get('campaign_uid', 'nocampaignid')
+        campaign_id = data.get('campaign_id', 'nocampaignid')
         recruiter_id = data.get('recruiter_id', 'norecruiterid')
 
         date_data = self.mongo_data.get(date, {})
@@ -332,7 +332,10 @@ class OpenLogParser(BaseLogFileParser):
                                 campaign_id=cid
                                 ).first()
                         if message:
-                            message.opened = cid_obj.get('opened')
+			    if message.opened:
+                            	message.opened = message.opened + cid_obj.get('opened')
+			    else:
+                            	message.opened = cid_obj.get('opened')
                             message.save()
 
 
@@ -464,5 +467,8 @@ class ClickLogParser(BaseLogFileParser):
                                 campaign_id=cid
                                 ).first()
                         if message:
-                            message.clicked = cid_obj.get('clicked')
+			    if message.clicked:
+                            	message.clicked = message.clicked + cid_obj.get('clicked')
+			    else:
+                            	message.clicked = cid_obj.get('clicked')
                             message.save()

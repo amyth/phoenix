@@ -27,20 +27,39 @@ class Command(BaseCommand):
 
     help = "Tracks the mail opens through the log files."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--date',
+            action='store',
+            dest='date',
+            default='',
+            help='Log file date'
+        )
+
     def handle(self, *args, **kwargs):
-        self.import_files()
+        self.import_files(**kwargs)
         self.track_opens()
         self.track_clicks()
 
         print "All done"
 
-    def import_files(self):
-        script = os.path.join(settings.BASE_DIR, "scripts/bash/import_openclick.sh")
-        subprocess.call([script])
+    def import_files(self, **kwargs):
+	_date = kwargs.get('date')
+	script_comm = "scripts/bash/import_openclick.sh"
+        script = os.path.join(settings.BASE_DIR, script_comm)
+	if _date:
+	    script_list = [script, _date]
+	else:
+	    script_list = [script]
+        subprocess.call(script_list)
 
     def track_opens(self):
         files = self.get_open_log_files()
         for f in files:
+	    if f.endswith('.gz'):
+                script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
+                subprocess.call([script, f])
+                f = f[:-3]
             parser = OpenLogParser(filepath=f)
             parser.parse()
 	    os.remove(f)
@@ -48,10 +67,13 @@ class Command(BaseCommand):
     def track_clicks(self):
         files = self.get_click_log_files()
         for f in files:
-            print f
+	    if f.endswith('.gz'):
+                script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
+                subprocess.call([script, f])
+                f = f[:-3]
             parser = ClickLogParser(filepath=f)
             parser.parse()
-	    #os.remove(f)
+	    os.remove(f)
 
     def get_open_log_files(self):
         """

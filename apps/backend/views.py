@@ -23,7 +23,8 @@ def campaigns(request):
     query = request.GET.get('query', '')
     if query:
         messages = RecruiterMessages.objects.filter(campaign__istartswith=query)
-        results = [{'name': x.campaign} for x in messages]
+	campaigns = list(set([x.campaign for x in messages]))
+        results = [{'name': x} for x in campaigns]
 
     return HttpResponse(json.dumps(results), content_type='application/json')
 

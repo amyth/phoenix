@@ -73,9 +73,9 @@ class IndexView(TemplateView):
             query_filter['recruiter'] = uid
 
         messages = list(RecruiterMessages.objects.filter(**query_filter))
-        sent = sum([x.sent for x in messages])
-        opened = sum([x.opened for x in messages])
-        clicked = sum([x.clicked for x in messages])
+        sent = sum([x.sent for x in messages if x.sent])
+        opened = sum([x.opened for x in messages if x.opened])
+        clicked = sum([x.clicked for x in messages if x.clicked])
         results.append({'sent': sent})
         results.append({'opened': opened})
         results.append({'clicked': clicked})
