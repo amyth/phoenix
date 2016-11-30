@@ -33,27 +33,36 @@ class IndexView(TemplateView):
             cams = request.POST.get('selected')
             camp_id = request.POST.get('camp_id')
             uid = request.POST.get('sent_by')
-            context['main_data'] = self.get_numbers(sdate=sdate, edate=edate,
+	    main_data, messages = self.get_numbers(sdate=sdate, edate=edate,
                     cams=cams, camp_id=camp_id, uid=uid)
+            context['main_data'] = main_data
         else:
 	    selected_data = {}
-            context["main_data"] = self.get_numbers()
+	    main_data, messages = self.get_numbers()
+            context["main_data"] = main_data
        	    selected_data['start_date'] = (timezone.now() + timezone.timedelta(days=-1)).strftime('%a %b %d %Y')
 	    context['selected_data'] = selected_data
+
+	#campaigns = list(set([m.campaign for m in messages if not m.campaign.startswith('RevivalEmails_')]))
+	campaigns = list(set([m.campaign for m in messages]))
+	context['campaigns'] = [{'name':c} for c in campaigns]
 
         return context
 
     def get_numbers(self, sdate=None, edate=None, cams=None, camp_id=None, uid=None):
         results = []
         query_filter = {}
-        #messages = base_messages = Message.objects.all()
 
         sdate = self.format_date(sdate) if sdate else datetime.datetime.now() + datetime.timedelta(days=-1)
         edate = self.format_date(edate) if edate else None
 
         if cams:
-            cams = cams.split(',')
-            query_filter['campaign__in'] = cams
+	    #if cams == "RevivalEmails":
+	    #    query_filter['campaign__istartswith'] = "RevivalEmails"
+	    #else:
+            	cams = cams.split(',')
+            	query_filter['campaign__in'] = cams
+	
 
         if sdate:
             if not edate:
@@ -80,7 +89,7 @@ class IndexView(TemplateView):
         results.append({'opened': opened})
         results.append({'clicked': clicked})
 
-        return results
+        return results, messages
 
     def format_date(self, d):
         return timezone.datetime.strptime(d, '%a %b %d %Y')
