@@ -67,14 +67,20 @@ class MailLogParser(BaseLogFileParser):
 
         self.log_file = open(self.filepath, 'r')
 
+	#Debug information
+	self.mailer_tag_log = open('/tmp/mailer_tag_log.txt', 'w')
+	self.recruiter_log = open('/tmp/recruiter_log.txt', 'w')
+	self.confirm_log = open('/tmp/confirm_log.txt', 'w')
+
     def _cleanup(self):
         super(MailLogParser, self)._cleanup()
-        for fobj in [self.primary_data_file, self.sent_data_file,
-                self.recruiter_data_file]:
-            try:
-                os.remove(fobj)
-            except OSError:
-                pass
+        #for fobj in [self.primary_data_file, self.sent_data_file,
+        #        self.recruiter_data_file]:
+        #    try:
+        #        os.remove(fobj)
+        #    except OSError:
+        #        pass
+	pass
 
     def _prepare(self):
         """
@@ -82,7 +88,7 @@ class MailLogParser(BaseLogFileParser):
         """
 
         ## create primary data file
-        primary = "%s.log" % uuid.uuid4().__str__()
+        primary = "%s-primary-sent.log" % uuid.uuid4().__str__()
         primary = os.path.join(self.data_directory, primary)
         os.system('cat %s | grep %s > %s' % (
             self.filepath, self.primary_tag, primary
@@ -90,7 +96,7 @@ class MailLogParser(BaseLogFileParser):
         self.primary_data_file = primary
 
         ## create recruiter data file
-        recruiter = "%s.log" % uuid.uuid4().__str__()
+        recruiter = "%s-primary-recruiter.log" % uuid.uuid4().__str__()
         recruiter = os.path.join(self.data_directory, recruiter)
         os.system('cat %s | grep %s > %s' % (
             self.filepath, self.recruiter_tag, recruiter
@@ -98,7 +104,7 @@ class MailLogParser(BaseLogFileParser):
         self.recruiter_data_file = recruiter
 
         ## create confirmation data file
-        confirm = "%s.log" % uuid.uuid4().__str__()
+        confirm = "%s-primary-confirm.log" % uuid.uuid4().__str__()
         confirm = os.path.join(self.data_directory, confirm)
         os.system('cat %s | grep %s > %s' % (
             self.filepath, self.confirm_tag, confirm
@@ -111,11 +117,12 @@ class MailLogParser(BaseLogFileParser):
             if message_id in self.data:
                 self.push_to_mongo(message_id)
 
-	    self.ccount += 1
-	    print "%d/%d" % (self.ccount, self.ctotal)
+	    #self.ccount += 1
+	    #print "%d/%d" % (self.ccount, self.ctotal)
         except Exception as err:
             ## Log the error with data
             print line, str(err)
+	    self.confirm_log.writelines(['%s, %s\n' % (line, err)])
 
     def _parse_message_info(self, line):
         data = {}
@@ -125,7 +132,9 @@ class MailLogParser(BaseLogFileParser):
             ## double space date fix
             date_fix = re.findall(self.date_regex, line)[0]
             date_fix = date_fix.replace("  ", " ")
-            date_fix = "%s %d" % (date_fix, datetime.datetime.now().year)
+	    year = datetime.datetime.now().year
+	    year = year - 1 if date_fix == "Dec 31" else year
+            date_fix = "%s %d" % (date_fix, year)
 
             ## sender fix
             sender = re.findall(self.sender_regex, line)
@@ -134,13 +143,17 @@ class MailLogParser(BaseLogFileParser):
             data["sent_at"] = date_fix
             data["sender"] = sender
             data["recipient"] = re.findall(self.recipient_regex, line)[0]
-            data["campaign"] = re.findall(self.campaign_regex, line)[0]
+            data["campaign"] = self.get_normalized_campaign(
+		    re.findall(self.campaign_regex, line)[0])
             self.data[message_id] = data
-	    self.pcount += 1
-	    print "%d/%d" % (self.pcount, self.ptotal)
+	    #self.pcount += 1
+	    #print "%d/%d" % (self.pcount, self.ptotal)
+	    if data["campaign"] == "sendJob":
+		self.mailer_tag_log.writelines(['%s\n' % message_id])
         except Exception as err:
             ## Log the error with data
             print line, str(err)
+	    #self.mailer_tag_log.writelines(['%s %s\n' % (line, str(err))])
 
     def _get_recruiter_info(self, line):
 	try:
@@ -154,10 +167,11 @@ class MailLogParser(BaseLogFileParser):
                 data["campaign_id"] = campaign_id
                 data["recruiter_id"] = recruiter_id
                 self.data[message_id] = data
-                self.rcount += 1
-                print "%d/%d" % (self.rcount, self.rtotal)
+		if xuid[0].startswith("sendJob"):
+    		    self.recruiter_log.writelines(['%s\n' % message_id])
 	except Exception as err:
             print line, str(err)
+	    #self.recruiter_log.writelines(['%s %s\n' % (line, str(err))])
 
 
     def parse_lines(self):
@@ -165,34 +179,42 @@ class MailLogParser(BaseLogFileParser):
         Parses a single line of log provided.
         """
 
-	print "Parsing primary data\n"
-        with open(self.primary_data_file, 'r') as pd_file:
-            lines = pd_file.readlines()
-	    self.ptotal = len(lines)
-	    self.pcount = 0
-            for line in lines:
-                self._parse_message_info(line)
+	#print "Parsing primary data\n"
+        #with open(self.primary_data_file, 'r') as pd_file:
+        #    lines = pd_file.readlines()
+	#    self.ptotal = len(lines)
+	#    self.pcount = 0
+        #    for line in lines:
+        #        self._parse_message_info(line)
 
-	print "Parsing recruiter data\n"
-        with open(self.recruiter_data_file, 'r') as rec_file:
-            lines = rec_file.readlines()
-	    self.rtotal = len(lines)
-	    self.rcount = 0
-	    for line in lines:
-		self._get_recruiter_info(line)
+	#print "Parsing recruiter data\n"
+        #with open(self.recruiter_data_file, 'r') as rec_file:
+        #    lines = rec_file.readlines()
+	#    self.rtotal = len(lines)
+	#    self.rcount = 0
+	#    for line in lines:
+	#	self._get_recruiter_info(line)
 
-	print "Processing ... \n"
-        with open(self.sent_data_file, 'r') as co_file:
-            lines = co_file.readlines()
-	    self.ctotal = len(lines)
-	    self.ccount = 0
-            for line in lines:
-                self._confirm_send(line)
-
+	#print "Processing ... \n"
+        #with open(self.sent_data_file, 'r') as co_file:
+        #    lines = co_file.readlines()
+	#    self.ctotal = len(lines)
+	#    self.ccount = 0
+        #    for line in lines:
+        #        self._confirm_send(line)
+	print "Parsing Data ..."
+	lines = self.log_file.readlines()
+    	for line in lines:
+	    if self.primary_tag in line:
+	    	self._parse_message_info(line)
+	    elif self.recruiter_tag in line:
+	    	self._get_recruiter_info(line)
+ 	    elif self.confirm_tag in line:
+	    	self._confirm_send(line)
 
     def parse(self):
         if self.log_file:
-            self._prepare()
+            #self._prepare()
             self.parse_lines()
 	    self._insert()
             self._cleanup()
@@ -212,8 +234,9 @@ class MailLogParser(BaseLogFileParser):
                                 )
                         self.final_data.append(obj)
 
-        self.mongo_data = {}
+	self.mongo_data.clear()
         RecruiterMessages.objects.insert(self.final_data)
+	del self.final_data[:]
 
     def push_to_mongo(self, mid):
 
@@ -228,13 +251,16 @@ class MailLogParser(BaseLogFileParser):
         reid_data = camp_data.get(recruiter_id, {})
         caid_data = reid_data.get(campaign_id, {})
         caid_data['sent'] = caid_data.get('sent', 0) + 1
-
         reid_data[campaign_id] = caid_data
         camp_data[recruiter_id] = reid_data
         date_data[campaign] = camp_data
         self.mongo_data[date] = date_data
 
-        self.data.pop(mid)
+	if campaign == "sendJob":
+	    self.confirm_log.writelines(['%s\n' % mid])
+	    
+
+        del self.data[mid]
 
 
 class OpenLogParser(BaseLogFileParser):
@@ -249,8 +275,11 @@ class OpenLogParser(BaseLogFileParser):
         #Regular expressions
         self.date_regex = r'[\d]+\/[\w]+\/[\d]+'
         self.qs_regex = r'/media/images/dot.gif\?([\w\d=&.@\/\_\-\+\|\%\:]+)'
+	self.uemail_regex = r'user_email=([\w\d\+\_\/\=\\\-]+)'
 
         self.log_file = open(self.filepath, 'r')
+	todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
+	self.open_data_file = open('/tmp/%s_open_data.log' % todays_date, 'w')
         self.workers = workers
 
     def parse(self):
@@ -276,11 +305,6 @@ class OpenLogParser(BaseLogFileParser):
             return email
         return self.decrypt(email.replace(" ", "+"))
 
-    def get_normalized_campaign(self, camp):
-        if camp.startswith('sendJob'):
-            return 'sendJob'
-        return camp
-
     def get_normalized_cdate(self, cdate):
         return datetime.datetime.strptime(cdate, '%Y%m%d').strftime('%b %d %Y')
 
@@ -291,6 +315,7 @@ class OpenLogParser(BaseLogFileParser):
             qs = urlparse.parse_qs(qs_string)
             cdate = self.get_normalized_cdate(qs.get('utm_campdt')[0])
             campaign = self.get_normalized_campaign(qs.get('utm_camp')[0])
+	    user_email = re.findall(self.uemail_regex, line)[0]
             campaign_id = 'nocampaignid'
             recruiter_id = 'norecruiterid'
 
@@ -312,6 +337,8 @@ class OpenLogParser(BaseLogFileParser):
             date_data[campaign] = camp_data
 
             self.data[cdate] = date_data
+	    self.open_data_file.writelines(['%s %s %s %s %s\n' % (cdate, campaign,
+		    self.decrypt_aes(user_email), campaign_id, recruiter_id)])
             self.prog += 1
             print "%s/%s" % (self.prog, self.total)
         except Exception as err:
@@ -337,6 +364,7 @@ class OpenLogParser(BaseLogFileParser):
 			    else:
                             	message.opened = cid_obj.get('opened')
                             message.save()
+	self.data.clear()
 
 
 class ClickLogParser(BaseLogFileParser):
@@ -355,6 +383,9 @@ class ClickLogParser(BaseLogFileParser):
         #Regular expressions
         self.date_regex = r'\w{3}\s+\d{1,2}'
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?\|\@]+)'
+
+	todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
+	self.click_data_file = open('/tmp/%s_click_data.log' % todays_date, 'w')
 
         self.log_file = open(self.filepath, 'r')
         self.workers = workers
@@ -403,12 +434,7 @@ class ClickLogParser(BaseLogFileParser):
         email = cont[3]
         if '@' in email:
             return email
-        return self.decrypt(email.replace(" ", "+"))
-
-    def get_normalized_campaign(self, camp):
-        if camp.startswith('sendJob'):
-            return 'sendJob'
-        return camp
+        return self.decrypt_aes(email.replace(' ', '+'))
 
     def get_normalized_cdate(self, cont):
         cont = cont.split("|")
@@ -423,6 +449,7 @@ class ClickLogParser(BaseLogFileParser):
             qs = urlparse.parse_qs(urllib.unquote(qs_string))
             campaign = self.get_normalized_campaign(qs.get('utm_campaign')[0])
             cdate = self.get_normalized_cdate(qs.get('etm_content')[0])
+	    user_email = self.get_normalized_email(qs.get('etm_content')[0])
             campaign_id = 'nocampaignid'
             recruiter_id = 'norecruiterid'
 
@@ -448,6 +475,9 @@ class ClickLogParser(BaseLogFileParser):
             self.data[cdate] = date_data
             self.prog += 1
 
+	    self.click_data_file.writelines(['%s %s %s %s %s\n' % (cdate, campaign,
+		    user_email, campaign_id, recruiter_id)])
+
             print "%s/%s" % (self.prog, self.total)
         except Exception as err:
             ## Log the error with data
@@ -472,3 +502,5 @@ class ClickLogParser(BaseLogFileParser):
 			    else:
                             	message.clicked = cid_obj.get('clicked')
                             message.save()
+
+	self.data.clear()

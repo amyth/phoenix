@@ -11,6 +11,7 @@
 ##
 ########################################
 
+from collections import OrderedDict
 import datetime
 
 from django.contrib import messages
@@ -81,13 +82,30 @@ class IndexView(TemplateView):
         if uid:
             query_filter['recruiter'] = uid
 
-        messages = list(RecruiterMessages.objects.filter(**query_filter))
+	message_qs = RecruiterMessages.objects.filter(**query_filter)
+        messages = list(message_qs)
         sent = sum([x.sent for x in messages if x.sent])
         opened = sum([x.opened for x in messages if x.opened])
         clicked = sum([x.clicked for x in messages if x.clicked])
         results.append({'sent': sent})
         results.append({'opened': opened})
         results.append({'clicked': clicked})
+
+	## datewise data
+	if (sdate and edate):
+	    dw_results = OrderedDict()
+	    dates = [sdate + datetime.timedelta(n) for n in range(int((edate - sdate).days)+1)]
+	    for d in dates:
+		start_time = d.replace(hour=0, minute=0, second=0)
+		end_time = d.replace(hour=23, minute=59, second=59)
+		filtered = list(message_qs.filter(date__gte=start_time, date__lte=end_time))
+		dw_results[d.strftime('%B %d %Y')] = {
+		    'sent': sum([x.sent for x in filtered if x.sent]),
+		    'opened': sum([x.opened for x in filtered if x.opened]),
+		    'clicked': sum([x.clicked for x in filtered if x.clicked]),
+		}
+	    results.append({'datewise': dw_results})
+
 
         return results, messages
 

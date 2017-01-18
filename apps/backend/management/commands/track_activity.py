@@ -11,6 +11,7 @@
 ##
 ########################################
 
+import datetime
 import os
 import subprocess
 
@@ -29,11 +30,18 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--date',
+            '--start_date',
             action='store',
-            dest='date',
+            dest='start_date',
             default='',
-            help='Log file date'
+            help='Log file start date'
+        )
+        parser.add_argument(
+            '--end_date',
+            action='store',
+            dest='end_date',
+            default='',
+            help='Log file end date'
         )
 
     def handle(self, *args, **kwargs):
@@ -44,14 +52,30 @@ class Command(BaseCommand):
         print "All done"
 
     def import_files(self, **kwargs):
-	_date = kwargs.get('date')
+	start_date = kwargs.get('start_date')
+	end_date = kwargs.get('end_date')
 	script_comm = "scripts/bash/import_openclick.sh"
         script = os.path.join(settings.BASE_DIR, script_comm)
-	if _date:
-	    script_list = [script, _date]
+
+        if (start_date and end_date):
+            try:
+                start_date_real = datetime.datetime.strptime(start_date, '%Y%m%d')
+                end_date_real = datetime.datetime.strptime(end_date, '%Y%m%d')
+            except Exception as err:
+                raise CommandError('Wrong date format provided for start/end date. Please use \'YYYYMMDD\' format.')
+
+            if start_date_real > end_date_real:
+                raise CommandError('Start date cannot be greater than end date.')
+
+            all_dates = [ start_date_real + datetime.timedelta(n) for n in range(int ((end_date_real - start_date_real).days))]
+
+            for day in all_dates:
+                date_string = day.strftime('%Y%m%d')
+                script_list = [script, date_string]
+                subprocess.call(script_list)
 	else:
 	    script_list = [script]
-        subprocess.call(script_list)
+            subprocess.call(script_list)
 
     def track_opens(self):
         files = self.get_open_log_files()
@@ -62,7 +86,6 @@ class Command(BaseCommand):
                 f = f[:-3]
             parser = OpenLogParser(filepath=f)
             parser.parse()
-	    os.remove(f)
 
     def track_clicks(self):
         files = self.get_click_log_files()
@@ -73,7 +96,6 @@ class Command(BaseCommand):
                 f = f[:-3]
             parser = ClickLogParser(filepath=f)
             parser.parse()
-	    os.remove(f)
 
     def get_open_log_files(self):
         """

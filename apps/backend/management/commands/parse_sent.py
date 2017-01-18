@@ -11,6 +11,7 @@
 ##
 ########################################
 
+import datetime
 import os
 import subprocess
 
@@ -26,18 +27,18 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--date',
+            '--start_date',
             action='store',
-            dest='date',
+            dest='start_date',
             default='',
-            help='SMTP log file date'
+            help='SMTP log file start date'
         )
         parser.add_argument(
-            '--amz_date',
+            '--end_date',
             action='store',
-            dest='amz_date',
+            dest='end_date',
             default='',
-            help='Amazon log file date'
+            help='SMTP log file start end date'
         )
 
     def handle(self, *args, **kwargs):
@@ -51,21 +52,36 @@ class Command(BaseCommand):
 		f = f[:-3]
             parser = MailLogParser(filepath=f)
             parser.parse()
-	    os.remove(f)
 
         print "All done"
 
     def import_files(self, **kwargs):
-	_date = kwargs.get('date')
-	_amz = kwargs.get('amz_date')
-
+	start_date = kwargs.get('start_date')
+	end_date = kwargs.get('end_date')
 	script_comm = "scripts/bash/import_mail.sh"
         script = os.path.join(settings.BASE_DIR, script_comm)
-	if (_date and _amz):
-	    script_list = [script, _date, _amz]
-	else:
+	#_amz = kwargs.get('amz_date')
+
+	if (start_date and end_date):
+            try:
+        	start_date_real = datetime.datetime.strptime(start_date, '%Y%m%d')
+           	end_date_real = datetime.datetime.strptime(end_date, '%Y%m%d')
+            except Exception as err:
+                raise CommandError('Wrong date format provided for start/end date. Please use \'YYYYMMDD\' format.')
+
+            if start_date_real > end_date_real:
+            	raise CommandError('Start date cannot be greater than end date.')
+
+            all_dates = [ start_date_real + datetime.timedelta(n) for n in range(int ((end_date_real - start_date_real).days))]
+
+	    for day in all_dates:
+		date_string = day.strftime('%Y%m%d')
+                amazon_date = day.strftime('%b_%-d')
+		script_list = [script, date_string, amazon_date]
+		subprocess.call(script_list)
+	else: 
 	    script_list = [script]
-        subprocess.call(script_list)
+	    subprocess.call(script_list)
 
     def get_log_files(self):
         """
@@ -78,4 +94,3 @@ class Command(BaseCommand):
                 name = os.path.abspath(os.path.join(settings.LOG_DATA_DIR, x))
                 files.append(name)
         return files
-
