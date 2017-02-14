@@ -140,6 +140,8 @@ LOG_DATA_DIR = "/data/logs"
 LOGIN_URL = "/login/"
 ADMIN_MEDIA_PREFIX = '/static/'
 
+LOGIN_REDIRECT_URL = '/'
+
 try:
 	import mongoengine
 	mongoengine.connect(MONGO_SETTINGS['database'])

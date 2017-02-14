@@ -14,12 +14,17 @@
 from collections import OrderedDict
 import datetime
 
-from django.contrib import messages
+from django.conf import settings
+from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.views.generic import TemplateView, ListView
 from django.utils import timezone
 
 from apps.messages.documents import RecruiterMessages
+from .predicates import is_allowed_campaign
+
+import rules
 
 
 class IndexView(TemplateView):
@@ -51,6 +56,7 @@ class IndexView(TemplateView):
         return context
 
     def get_numbers(self, sdate=None, edate=None, cams=None, camp_id=None, uid=None):
+	restricted_campaigns = []
         results = []
         query_filter = {}
 
@@ -62,9 +68,25 @@ class IndexView(TemplateView):
 	    #    query_filter['campaign__istartswith'] = "RevivalEmails"
 	    #else:
             	cams = cams.split(',')
-            	query_filter['campaign__in'] = cams
-	
+		allowed_cams = []
+		for cam in cams:
+		    if rules.test_rule('is_allowed_campaign', self.request.user, cam):
+			allowed_cams.append(cam)
+		    else:
+			restricted_campaigns.append(cam)
 
+		
+		if restricted_campaigns:
+		    django_messages.error(self.request,
+			    'You do not have permission to access the mentioned campaign(s): %s' % ', '.join(restricted_campaigns)) 
+            	query_filter['campaign__in'] = allowed_cams
+	else:
+		admins = Group.objects.get(name='administrators')
+		if admins not in self.request.user.groups.all():
+		    user_group = self.request.user.groups.first()
+		    allowed_cams = settings.CAMPAIGN_PERMISSIONS.get(user_group.name, [])
+		    query_filter['campaign__in'] = allowed_cams
+	
         if sdate:
             if not edate:
 		sdate = timezone.datetime.strptime(sdate.strftime('%D'), '%m/%d/%y')
