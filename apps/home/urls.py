@@ -13,8 +13,12 @@
 
 from django.conf.urls import url
 
-from .views import index
+from .views import (
+    index,
+    logout_view
+)
 
 urlpatterns = [
     url(r'^$', index, name="index"),
+    url(r'^u/logout/$', logout_view, name="logout"),
 ]

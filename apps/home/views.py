@@ -16,8 +16,10 @@ import datetime
 
 from django.conf import settings
 from django.contrib import messages as django_messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.shortcuts import redirect
 from django.views.generic import TemplateView, ListView
 from django.utils import timezone
 
@@ -151,6 +153,10 @@ class IndexView(TemplateView):
 
         return selected_data
 
+
+def logout_view(request):
+    logout(request)
+    return redirect('/login/')
 
 ## View variables
 index = login_required(IndexView.as_view())

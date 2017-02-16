@@ -445,7 +445,8 @@ class ClickLogParser(BaseLogFileParser):
     def _parse_message_info(self, line):
         data = {}
         try:
-            qs_string = re.findall(self.qs_regex, line)[-1]
+            qs_string = re.findall(self.qs_regex, line)
+	    qs_string = [x for x in qs_string if self.primary_tag in x][0]
             qs = urlparse.parse_qs(urllib.unquote(qs_string))
             campaign = self.get_normalized_campaign(qs.get('utm_campaign')[0])
             cdate = self.get_normalized_cdate(qs.get('etm_content')[0])

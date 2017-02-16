@@ -56,7 +56,7 @@ class BaseLogFileParser(object):
         return datetime.datetime.strptime(date, '%b %d %Y')
 
     def get_normalized_campaign(self, camp):
-	camps = ['sendJob_', 'RevivalEmails_', 'RevivalMail_']
+	camps = ['sendJob_', 'RevivalEmails_', 'RevivalMail_', 'applyMail_']
 	camp = camp.replace('RevivalMail_', 'RevivalEmails_')
 	for xcamp in camps:
 	    if camp.startswith(xcamp):

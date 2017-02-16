@@ -1,8 +1,33 @@
+{% load static from staticfiles %}
+
 <!DOCTYPE html>
 <html lang="en">
 
     {% include 'layouts/partials/html_head.html' %}
     <body>
+	{% block navigation %}
+	<nav class="navbar">
+	    <div class="container">
+		<ul class="navbar-list u-pull-left">
+		    <li class="navbar-item logo">
+			<a href="/"><img src="{% static 'images/phoenix-logo-blue.png' %}"/></a>
+		    </li>
+		</ul>
+		<ul class="navbar-list u-pull-right">
+		    {% if request.user.is_authenticated %}
+		    <li class="navbar-item">
+			<span>Hello {{ request.user.username }},</span>
+		    </li>
+		    <li class="navbar-item">
+			<a href="{% url 'home:logout' %}">Logout</a>
+		    </li>
+		    {% endif %}
+		</ul> 
+		<div class="u-cf">
+		</div>
+	    </div>
+	</nav>
+	{% endblock navigation %}
         {% block content %}{% endblock content %}
         {% include 'layouts/partials/footer.html' %}
     </body>
