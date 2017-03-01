@@ -15,10 +15,12 @@ from django.conf.urls import url
 
 from .views import (
     index,
+    track_ads,
     logout_view
 )
 
 urlpatterns = [
     url(r'^$', index, name="index"),
+    url(r'^adverts/$', track_ads, name="trackads"),
     url(r'^u/logout/$', logout_view, name="logout"),
 ]

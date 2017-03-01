@@ -5,15 +5,7 @@
 {% block content %}
 <div class="container">
     <!-- messages -->
-    <div class="row">
-		{% if messages %}
-		<ul class="messages">
-		    {% for message in messages %}
-			<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-		    {% endfor %}
-		</ul>
-		{% endif %}
-    </div>
+    {% include 'layouts/partials/messages.html' %}
 
     <div class="main-info row">
         {% for cat in main_data %}
@@ -32,32 +24,6 @@
         {% endfor %}
     </div>
 
-        {% for cat in main_data %}
-	    {% for item, dlist in cat.iteritems %}
-	    	{% if item == 'datewise' %}
-			<table class="u-full-width datewise">
-  			<thead>
-    				<tr>
-      					<th>Date</th>
-      					<th>Sent</th>
-      					<th>Opened</th>
-      					<th>Clicked</th>
-    				</tr>
- 			</thead>
-			<tbody>
-		    {% for d, nums in dlist.iteritems %}
-			<tr>
-			    <td>{{ d }}</td>
-			    <td>{{ nums.sent }}</td>
-			    <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
-			    <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
-			</tr>
-		    {% endfor %}
-			</tbody>
-			</table>
-		{% endif %}
-	    {% endfor %}
-	{% endfor %}
 
     <div class="form-container">
         <div class="campaigns toremove tags u-cf">
@@ -120,6 +86,34 @@
                 </div>
             </div>
         </form>
+    </div>
+    <div class="results-container">
+        {% for cat in main_data %}
+	    {% for item, dlist in cat.iteritems %}
+	    	{% if item == 'datewise' %}
+			<table class="u-full-width datewise">
+  			<thead>
+    				<tr>
+      					<th>Date</th>
+      					<th>Sent</th>
+      					<th>Opened</th>
+      					<th>Clicked</th>
+    				</tr>
+ 			</thead>
+			<tbody>
+		    {% for d, nums in dlist.iteritems %}
+			<tr>
+			    <td>{{ d }}</td>
+			    <td>{{ nums.sent }}</td>
+			    <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
+			    <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
+			</tr>
+		    {% endfor %}
+			</tbody>
+			</table>
+		{% endif %}
+	    {% endfor %}
+	{% endfor %}
     </div>
 </div>
 {% endblock content %}

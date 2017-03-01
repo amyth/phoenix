@@ -178,6 +178,10 @@ table.u-full-width.datewise {
     padding: 5px 0;
     font-size: 12px;
 }
+
+.logo-bar {
+    margin-right: 7rem;
+}
 .navbar-item.logo img {
     width: 110px;
     height: auto;
@@ -215,4 +219,46 @@ table.u-full-width.datewise {
     padding: 5px;
     display: block;
 }
+.left-bar {
+    margin-top: -6px;
+}
 
+.left-bar .navbar-link span {
+    color: #6b6b6b;
+    font-size: 20px;
+    vertical-align: middle;
+}
+#track_ads_form {
+    margin-top: 8rem;
+}
+.no-data {
+    display: block;
+    margin: 20px 0;
+    text-align: center;
+    background: #ffffe0;
+    padding: 25px;
+    border-radius: 4px;
+    color: #75745e;
+}
+.table-top {
+    display: block;
+    margin: 20px 0;
+    text-align: center;
+    background: #f3f3f3;
+    padding: 25px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.table-top .date {
+    position: absolute;
+    top:5px;
+    right:15px;
+    font-size: 13px;
+    color: #969494;
+}
+
+.table-top .number {
+    font-weight: bold;
+    font-size: 30px;
+}

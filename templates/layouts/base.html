@@ -8,10 +8,15 @@
 	{% block navigation %}
 	<nav class="navbar">
 	    <div class="container">
-		<ul class="navbar-list u-pull-left">
+		<ul class="navbar-list u-pull-left logo-bar">
 		    <li class="navbar-item logo">
 			<a href="/"><img src="{% static 'images/phoenix-logo-blue.png' %}"/></a>
 		    </li>
+		</ul>
+		<ul class="navbar-list u-pull-left left-bar">
+            <li class="navbar-item">
+                <a href="{% url 'home:trackads' %}" class="navbar-link"><span class="typicons-pieChart"></span> Track Adverts</a>
+            </li>
 		</ul>
 		<ul class="navbar-list u-pull-right">
 		    {% if request.user.is_authenticated %}

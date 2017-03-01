@@ -384,8 +384,9 @@ class ClickLogParser(BaseLogFileParser):
         self.date_regex = r'\w{3}\s+\d{1,2}'
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?\|\@]+)'
 
-	todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
-	self.click_data_file = open('/tmp/%s_click_data.log' % todays_date, 'w')
+        if 'ClickLogParser' in str(self.__class__):
+            todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
+            self.click_data_file = open('/tmp/%s_click_data.log' % todays_date, 'w')
 
         self.log_file = open(self.filepath, 'r')
         self.workers = workers
