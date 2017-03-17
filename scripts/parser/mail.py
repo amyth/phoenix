@@ -57,12 +57,11 @@ class MailLogParser(BaseLogFileParser):
         self.recipient_regex = r'to=<([\w\d@\.\-\_\/\+]+)\>'
         self.mid_regex = r'\w+\/\w+\[[\w\d]+\]\:\s+([\w\d]+)'
         self.campaign_regex = r'[\wd]+-[\w\d]+:\s+([\w\d]+)'
-        self.xuid_regex = r'[\wd]+-[\w\d]+:\s+([\w\d\-|]+)'
+        self.xuid_regex = r'[\wd]+-[\w\d]+:\s+([\w\d\-|\~\!\@\#\$\%\^\&\*\(\)\+\=\{\}\[\]\\\'\"\:\;\?\/\>\<\.\,\`]+)'
         self.reply_to_regex = r'Reply-To: ([\w\d@\.\-\_\/\+]+)'
 	self.mongo_data = {}
         self.final_data = []
         self.workers = workers
-	self.ptotal = 0
 	self.pcount = 0
 
         self.log_file = open(self.filepath, 'r')
@@ -71,16 +70,6 @@ class MailLogParser(BaseLogFileParser):
 	self.mailer_tag_log = open('/tmp/mailer_tag_log.txt', 'w')
 	self.recruiter_log = open('/tmp/recruiter_log.txt', 'w')
 	self.confirm_log = open('/tmp/confirm_log.txt', 'w')
-
-    def _cleanup(self):
-        super(MailLogParser, self)._cleanup()
-        #for fobj in [self.primary_data_file, self.sent_data_file,
-        #        self.recruiter_data_file]:
-        #    try:
-        #        os.remove(fobj)
-        #    except OSError:
-        #        pass
-	pass
 
     def _prepare(self):
         """
@@ -146,8 +135,8 @@ class MailLogParser(BaseLogFileParser):
             data["campaign"] = self.get_normalized_campaign(
 		    re.findall(self.campaign_regex, line)[0])
             self.data[message_id] = data
-	    #self.pcount += 1
-	    #print "%d/%d" % (self.pcount, self.ptotal)
+	    self.pcount += 1
+	    print "%d" % self.pcount
 	    if data["campaign"] == "sendJob":
 		self.mailer_tag_log.writelines(['%s\n' % message_id])
         except Exception as err:
@@ -162,7 +151,7 @@ class MailLogParser(BaseLogFileParser):
                 data = self.data.get(message_id)
                 xuid = re.findall(self.xuid_regex, line)[0]
                 xuid = xuid.split("|")
-                campaign_id = xuid[1]
+                campaign_id = self.get_campaign_id(xuid)
                 recruiter_id = xuid[-1]
                 data["campaign_id"] = campaign_id
                 data["recruiter_id"] = recruiter_id
@@ -323,7 +312,7 @@ class OpenLogParser(BaseLogFileParser):
                 tid = urllib.unquote(qs.get('tid')[0]).split('|')
                 #print qs_string
                 #print qs, tid
-                campaign_id = tid[1]
+                campaign_id = self.get_campaign_id(tid)
                 recruiter_id = tid[-1]
 
             date_data = self.data.get(cdate, {})
@@ -395,7 +384,7 @@ class ClickLogParser(BaseLogFileParser):
         super(ClickLogParser, self)._cleanup()
         try:
             pass
-            #os.remove(self.primary_data_file)
+            os.remove(self.primary_data_file)
         except OSError:
             pass
 
@@ -457,7 +446,7 @@ class ClickLogParser(BaseLogFileParser):
 
             if 'tid' in qs:
                 tid = urllib.unquote(qs.get('tid')[0]).split('|')
-                campaign_id = tid[1]
+                campaign_id = self.get_campaign_id(tid)
                 recruiter_id = tid[-1]
 
 

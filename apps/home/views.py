@@ -153,6 +153,7 @@ class IndexView(TemplateView):
         selected_data['start_date'] = post.get('start_date')
         selected_data['end_date'] = post.get('end_date')
         selected_data['sent_by'] = post.get('sent_by')
+        selected_data['camp_id'] = post.get('camp_id')
 
         return selected_data
 

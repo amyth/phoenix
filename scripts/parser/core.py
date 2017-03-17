@@ -75,3 +75,8 @@ class BaseLogFileParser(object):
     	padded_plaintext = cipher.decrypt(ciphertext)
     	plaintext = self.unpad_plaintext(padded_plaintext)
     	return plaintext
+
+    def get_campaign_id(self, uidlist):
+        if len(uidlist) > 3:
+            return ''.join([str(x) for x in [uidlist[1], uidlist[2], uidlist[3]]])
+        return uidlist[1]
