@@ -289,10 +289,10 @@ class OpenLogParser(BaseLogFileParser):
 
         self.update_open_status()
 
-    def get_normalized_email(email):
+    def get_normalized_email(self, email):
         if '@' in email:
             return email
-        return self.decrypt(email.replace(" ", "+"))
+        return self.decrypt_aes(email.replace(" ", "+"))
 
     def get_normalized_cdate(self, cdate):
         return datetime.datetime.strptime(cdate, '%Y%m%d').strftime('%b %d %Y')
@@ -304,14 +304,12 @@ class OpenLogParser(BaseLogFileParser):
             qs = urlparse.parse_qs(qs_string)
             cdate = self.get_normalized_cdate(qs.get('utm_campdt')[0])
             campaign = self.get_normalized_campaign(qs.get('utm_camp')[0])
-	    user_email = re.findall(self.uemail_regex, line)[0]
+            user_email = re.findall(self.uemail_regex, line)[0]
             campaign_id = 'nocampaignid'
             recruiter_id = 'norecruiterid'
 
             if 'tid' in qs:
                 tid = urllib.unquote(qs.get('tid')[0]).split('|')
-                #print qs_string
-                #print qs, tid
                 campaign_id = self.get_campaign_id(tid)
                 recruiter_id = tid[-1]
 
@@ -326,8 +324,8 @@ class OpenLogParser(BaseLogFileParser):
             date_data[campaign] = camp_data
 
             self.data[cdate] = date_data
-	    self.open_data_file.writelines(['%s %s %s %s %s\n' % (cdate, campaign,
-		    self.decrypt_aes(user_email), campaign_id, recruiter_id)])
+            self.open_data_file.writelines(['%s %s %s %s %s\n' % (cdate, campaign,
+                    self.get_normalized_email(user_email), campaign_id, recruiter_id)])
             self.prog += 1
             print "%s/%s" % (self.prog, self.total)
         except Exception as err:

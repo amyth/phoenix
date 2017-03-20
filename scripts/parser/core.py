@@ -15,7 +15,10 @@ import base64
 import datetime
 import os
 
+from django.conf import settings
+
 from Crypto.Cipher import AES
+from cryptography.fernet import Fernet, InvalidToken
 
 
 class BaseLogFileParser(object):
@@ -70,13 +73,20 @@ class BaseLogFileParser(object):
     	return plaintext
 
     def decrypt_aes(self, ciphertext, enc_key='cae92ca7-d27d-41', enc_iv='3dc0b183-4d21-47'):
-	ciphertext = base64.b64decode(ciphertext)
+        ciphertext = base64.b64decode(ciphertext)
     	cipher = AES.new(enc_key, AES.MODE_CBC, enc_iv)
     	padded_plaintext = cipher.decrypt(ciphertext)
     	plaintext = self.unpad_plaintext(padded_plaintext)
+
     	return plaintext
 
     def get_campaign_id(self, uidlist):
         if len(uidlist) > 3:
-            return ''.join([str(x) for x in [uidlist[1], uidlist[2], uidlist[3]]])
+            return '|'.join([str(x) for x in [uidlist[1], uidlist[2], uidlist[3]]])
+        else:
+            try:
+                fern = Fernet(settings.FERNET_DECRYPT_KEY)
+                campaign_id = fern.decrypt(uidlist[1])
+            except InvalidToken as err:
+                pass
         return uidlist[1]

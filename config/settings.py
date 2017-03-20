@@ -139,8 +139,8 @@ MONGO_SETTINGS = {
 LOG_DATA_DIR = "/data/logs"
 LOGIN_URL = "/login/"
 ADMIN_MEDIA_PREFIX = '/static/'
-
 LOGIN_REDIRECT_URL = '/'
+FERNET_DECRYPT_KEY = 'F8lZb_92t4prgjLRIgIkdA5_2XSX-h0aPnElWROUyTA='
 
 try:
 	import mongoengine
