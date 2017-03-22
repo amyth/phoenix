@@ -19,6 +19,7 @@ class AdvertClickParser(ClickLogParser):
         super(AdvertClickParser, self).__init__(filepath, data_directory=data_directory,
         date_format=date_format, primary_tag=primary_tag, workers=workers, *args, **kwargs)
         self.data = []
+        self.date_regex = r'\d{1,2}\/\w{3}\/\d{4}'
 
     
     def _prepare(self):
@@ -32,7 +33,7 @@ class AdvertClickParser(ClickLogParser):
 
     def _date_hacks(self, date):
             current_year = datetime.datetime.now().year
-            date = datetime.datetime.strptime(date, '%b %d')
+            date = datetime.datetime.strptime(date, '%d/%b/%Y')
             if (date.date().day == 31 and date.date().month == 12):
                 current_year -= 1
             date = date.replace(year=current_year, hour=0, minute=0, second=0)

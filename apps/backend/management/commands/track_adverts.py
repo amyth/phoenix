@@ -90,7 +90,7 @@ class Command(BaseCommand):
         files = []
         file_list = os.listdir(settings.LOG_DATA_DIR)
         for x in file_list:
-            if x.startswith('httpd'):
+            if x.startswith('access'):
                 name = os.path.abspath(os.path.join(settings.LOG_DATA_DIR, x))
                 files.append(name)
         return files

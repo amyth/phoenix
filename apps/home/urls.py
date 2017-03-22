@@ -12,6 +12,7 @@
 ########################################
 
 from django.conf.urls import url
+from django.views.generic import TemplateView
 
 from .views import (
     index,
@@ -23,4 +24,5 @@ urlpatterns = [
     url(r'^$', index, name="index"),
     url(r'^adverts/$', track_ads, name="trackads"),
     url(r'^u/logout/$', logout_view, name="logout"),
+    url(r'^jsatabl/$', TemplateView.as_view(template_name="others/jsatabl.html"), name="jsatabl"),
 ]
