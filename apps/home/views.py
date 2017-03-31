@@ -6,8 +6,8 @@
 # @author:          Amyth
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
-# @created_date: 17-10-2016
-# @last_modify: Wed Nov 16 13:42:05 2016
+# @created_date: 31-03-2017
+# @last_modify: Fri Mar 31 11:21:22 2017
 ##
 ########################################
 
@@ -31,8 +31,8 @@ from .predicates import is_allowed_campaign
 
 import rules
 
-
 class IndexView(TemplateView):
+
     template_name = "home/index.html"
 
     def get_context_data(self, *args, **kwargs):
@@ -44,24 +44,26 @@ class IndexView(TemplateView):
             cams = request.POST.get('selected')
             camp_id = request.POST.get('camp_id')
             uid = request.POST.get('sent_by')
-	    main_data, messages = self.get_numbers(sdate=sdate, edate=edate,
-                    cams=cams, camp_id=camp_id, uid=uid)
+            main_data, messages = self.get_numbers(sdate=sdate,
+                    edate=edate, cams=cams, camp_id=camp_id, uid=uid)
             context['main_data'] = main_data
         else:
-	    selected_data = {}
-	    main_data, messages = self.get_numbers()
+            selected_data = {}
+            main_data, messages = self.get_numbers()
             context["main_data"] = main_data
-       	    selected_data['start_date'] = (timezone.now() + timezone.timedelta(days=-1)).strftime('%a %b %d %Y')
-	    context['selected_data'] = selected_data
+            selected_data['start_date'] = (
+                    timezone.now() + timezone.timedelta(days=-1)).strftime('%a %b %d %Y')
+            context['selected_data'] = selected_data
 
-	#campaigns = list(set([m.campaign for m in messages if not m.campaign.startswith('RevivalEmails_')]))
-	campaigns = list(set([m.campaign for m in messages]))
-	context['campaigns'] = [{'name':c} for c in campaigns]
+        #campaigns = list(set([m.campaign for m in messages if not m.campaign.startswith('RevivalEmails_')]))
+        campaigns = list(set([m.campaign for m in messages]))
+        context['campaigns'] = [{'name': c} for c in campaigns]
 
         return context
 
     def get_numbers(self, sdate=None, edate=None, cams=None, camp_id=None, uid=None):
-	restricted_campaigns = []
+
+        restricted_campaigns = []
         results = []
         query_filter = {}
 
@@ -69,34 +71,31 @@ class IndexView(TemplateView):
         edate = self.format_date(edate) if edate else None
 
         if cams:
-	    #if cams == "RevivalEmails":
-	    #    query_filter['campaign__istartswith'] = "RevivalEmails"
-	    #else:
-            	cams = cams.split(',')
-		allowed_cams = []
-		for cam in cams:
-		    if rules.test_rule('is_allowed_campaign', self.request.user, cam):
-			allowed_cams.append(cam)
-		    else:
-			restricted_campaigns.append(cam)
+            cams = cams.split(',')
+            allowed_cams = []
 
-		
-		if restricted_campaigns:
-		    django_messages.error(self.request,
-			    'You do not have permission to access the mentioned campaign(s): %s' % ', '.join(restricted_campaigns)) 
-            	query_filter['campaign__in'] = allowed_cams
-	else:
-		admins = Group.objects.get(name='administrators')
-		if admins not in self.request.user.groups.all():
-		    user_group = self.request.user.groups.first()
-		    allowed_cams = settings.CAMPAIGN_PERMISSIONS.get(user_group.name, [])
-		    query_filter['campaign__in'] = allowed_cams
-	
+            for cam in cams:
+                if rules.test_rule('is_allowed_campaign', self.request.user, cam):
+                    allowed_cams.append(cam)
+                else:
+                    restricted_campaigns.append(cam)
+
+            if restricted_campaigns:
+                django_messages.error(self.request, 'You do not have permission to access the mentioned campaign(s): %s' % ', '.join(restricted_campaigns))
+                query_filter['campaign__in'] = allowed_cams
+            else:
+                admins = Group.objects.get(name='administrators')
+                if admins not in self.request.user.groups.all():
+                    user_group = self.request.user.groups.first()
+                    allowed_cams = settings.CAMPAIGN_PERMISSIONS.get(
+                        user_group.name, [])
+                    query_filter['campaign__in'] = allowed_cams
+
         if sdate:
             if not edate:
-		sdate = timezone.datetime.strptime(sdate.strftime('%D'), '%m/%d/%y')
-		start_time = sdate.replace(hour=0, minute=0, second=0)
-		end_time = sdate.replace(hour=23, minute=59, second=59)
+                sdate = timezone.datetime.strptime(sdate.strftime('%D'), '%m/%d/%y')
+                start_time = sdate.replace(hour=0, minute=0, second=0)
+                end_time = sdate.replace(hour=23, minute=59, second=59)
                 query_filter['date__gte'] = start_time
                 query_filter['date__lte'] = end_time
             else:
@@ -109,7 +108,7 @@ class IndexView(TemplateView):
         if uid:
             query_filter['recruiter'] = uid
 
-	message_qs = RecruiterMessages.objects.filter(**query_filter)
+        message_qs = RecruiterMessages.objects.filter(**query_filter)
         messages = list(message_qs)
         sent = sum([x.sent for x in messages if x.sent])
         opened = sum([x.opened for x in messages if x.opened])
@@ -118,27 +117,43 @@ class IndexView(TemplateView):
         results.append({'opened': opened})
         results.append({'clicked': clicked})
 
-	## datewise data
-	if (sdate and edate):
-	    dw_results = OrderedDict()
-	    dates = [sdate + datetime.timedelta(n) for n in range(int((edate - sdate).days)+1)]
-	    for d in dates:
-		start_time = d.replace(hour=0, minute=0, second=0)
-		end_time = d.replace(hour=23, minute=59, second=59)
-		filtered = list(message_qs.filter(date__gte=start_time, date__lte=end_time))
-		dw_results[d.strftime('%B %d %Y')] = {
-		    'sent': sum([x.sent for x in filtered if x.sent]),
-		    'opened': sum([x.opened for x in filtered if x.opened]),
-		    'clicked': sum([x.clicked for x in filtered if x.clicked]),
-		}
-	    results.append({'datewise': dw_results})
+        if (sdate and edate):
+            the_dates = [sdate + datetime.timedelta(n) for n in range(int((edate - sdate).days) + 1)]
+            dw_results = OrderedDict()
 
+            # campaignwise data
+            if uid:
+                cids = list(tuple([x.campaign_id for x in message_qs]))
+                for campaign_id in cids:
+                    for d in the_dates:
+                        start_time = d.replace(hour=0, minute=0, second=0)
+                        end_time = d.replace(hour=23, minute=59, second=59)
+                        filtered = list(message_qs.filter(date__gte=start_time, date__lte=end_time, campaign_id=campaign_id))
+                        if filtered:
+                            dw_results[campaign_id] = {d.strftime('%B %d %Y'): {
+                                'sent': sum([x.sent for x in filtered if x.sent]),
+                                'opened': sum([x.opened for x in filtered if x.opened]),
+                                'clicked': sum([x.clicked for x in filtered if x.clicked]),
+                            }}
+                results.append({'campaignwise': dw_results})
+                return results, messages
 
+            # datewise data
+            for d in the_dates:
+                start_time = d.replace(hour=0, minute=0, second=0)
+                end_time = d.replace(hour=23, minute=59, second=59)
+                filtered = list(message_qs.filter(date__gte=start_time, date__lte=end_time))
+                dw_results[d.strftime('%B %d %Y')] = {
+                    'sent': sum([x.sent for x in filtered if x.sent]),
+                    'opened': sum([x.opened for x in filtered if x.opened]),
+                    'clicked': sum([x.clicked for x in filtered if x.clicked]),
+                }
+
+            results.append({'datewise': dw_results})
         return results, messages
 
     def format_date(self, d):
         return timezone.datetime.strptime(d, '%a %b %d %Y')
-
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -147,7 +162,7 @@ class IndexView(TemplateView):
 
     def get_selected_data(self, post):
         selected_data = {}
-        selected = post.get('selected','')
+        selected = post.get('selected', '')
         selected = selected.split(',') if selected else []
         selected_data['selected'] = selected
         selected_data['start_date'] = post.get('start_date')
@@ -156,8 +171,6 @@ class IndexView(TemplateView):
         selected_data['camp_id'] = post.get('camp_id')
 
         return selected_data
-
-
 
 class TrackAds(TemplateView):
     template_name = "home/track_ads.html"
@@ -173,14 +186,15 @@ class TrackAds(TemplateView):
             tracking_medium = request.POST.get('tracking_medium')
             tracking_drive = request.POST.get('tracking_drive')
             main_data = self.get_numbers(sdate=sdate, edate=edate,
-                    tracking_id=tracking_id, tracking_medium=tracking_medium,
-                    tracking_source=tracking_source, tracking_drive=tracking_drive)
+                                         tracking_id=tracking_id, tracking_medium=tracking_medium,
+                                         tracking_source=tracking_source, tracking_drive=tracking_drive)
             context['main_data'] = main_data
         else:
             selected_data = {}
             main_data = self.get_numbers()
             context["main_data"] = main_data
-            selected_data['start_date'] = (timezone.now() + timezone.timedelta(days=-1)).strftime('%a %b %d %Y')
+            selected_data['start_date'] = (
+                timezone.now() + timezone.timedelta(days=-1)).strftime('%a %b %d %Y')
             context['selected_data'] = selected_data
 
         return context
@@ -202,16 +216,18 @@ class TrackAds(TemplateView):
         return selected_data
 
     def get_numbers(self, sdate=None, edate=None, tracking_id=None, tracking_source=None,
-            tracking_drive=None, tracking_medium=None):
+                    tracking_drive=None, tracking_medium=None):
         results = []
         query_filter = {}
 
-        sdate = self.format_date(sdate) if sdate else datetime.datetime.now() + datetime.timedelta(days=-1)
+        sdate = self.format_date(
+            sdate) if sdate else datetime.datetime.now() + datetime.timedelta(days=-1)
         edate = self.format_date(edate) if edate else None
-        
+
         if sdate:
             if not edate:
-                sdate = timezone.datetime.strptime(sdate.strftime('%D'), '%m/%d/%y')
+                sdate = timezone.datetime.strptime(
+                    sdate.strftime('%D'), '%m/%d/%y')
                 start_time = sdate.replace(hour=0, minute=0, second=0)
                 end_time = sdate.replace(hour=23, minute=59, second=59)
                 query_filter['date__gte'] = start_time
@@ -234,12 +250,12 @@ class TrackAds(TemplateView):
         if tracking_id:
             query_filter['tracking_id'] = tracking_id
 
-        adverts = list( Advert.objects.filter(**query_filter))
+        adverts = list(Advert.objects.filter(**query_filter))
         get_attr = operator.attrgetter('date')
-        results = {k.strftime('%d %b %Y'): list(g) for k, g in groupby(sorted(adverts, key=get_attr), get_attr)}
+        results = {k.strftime('%d %b %Y'): list(g) for k, g in groupby(
+            sorted(adverts, key=get_attr), get_attr)}
 
         return results
-
 
     def format_date(self, d):
         return timezone.datetime.strptime(d, '%a %b %d %Y')
@@ -249,6 +265,7 @@ def logout_view(request):
     logout(request)
     return redirect('/login/')
 
-## View variables
+
+# View variables
 index = login_required(IndexView.as_view())
 track_ads = login_required(TrackAds.as_view())

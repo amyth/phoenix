@@ -10,7 +10,7 @@
     <div class="main-info row">
         {% for cat in main_data %}
                 {% for item, nums in cat.iteritems %}
-   		    {% if not item == 'datewise' %}
+   		    {% if not item == 'datewise' and not item == 'campaignwise' %}
 		    <div class="four columns">
                 	<div class="header-info">
                     	{{ item }}
@@ -89,31 +89,58 @@
     </div>
     <div class="results-container">
         {% for cat in main_data %}
-	    {% for item, dlist in cat.iteritems %}
-	    	{% if item == 'datewise' %}
-			<table class="u-full-width datewise">
-  			<thead>
-    				<tr>
-      					<th>Date</th>
-      					<th>Sent</th>
-      					<th>Opened</th>
-      					<th>Clicked</th>
-    				</tr>
- 			</thead>
-			<tbody>
-		    {% for d, nums in dlist.iteritems %}
-			<tr>
-			    <td>{{ d }}</td>
-			    <td>{{ nums.sent }}</td>
-			    <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
-			    <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
-			</tr>
-		    {% endfor %}
-			</tbody>
-			</table>
-		{% endif %}
-	    {% endfor %}
-	{% endfor %}
+            {% if 'datewise' in cat or 'campaignwise' in cat %}
+                {% for item, dlist in cat.iteritems %}
+                    {% if item == 'datewise' %}
+                        <table class="u-full-width datewise">
+                        <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Sent</th>
+                                    <th>Opened</th>
+                                    <th>Clicked</th>
+                                </tr>
+                        </thead>
+                        <tbody>
+                        {% for d, nums in dlist.iteritems %}
+                        <tr>
+                            <td>{{ d }}</td>
+                            <td>{{ nums.sent }}</td>
+                            <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
+                            <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                        </table>
+                    {% endif %}
+                    {% if item == 'campaignwise' %}
+                        {% for cid, rdlist in dlist.iteritems %}
+                            <h4 class="campaign_id"><span>{{ cid }}</span></h4>
+                            <table class="u-full-width datewise">
+                            <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Sent</th>
+                                        <th>Opened</th>
+                                        <th>Clicked</th>
+                                    </tr>
+                            </thead>
+                            <tbody>
+                            {% for d, nums in rdlist.iteritems %}
+                                <tr>
+                                    <td>{{ d }}</td>
+                                    <td>{{ nums.sent }}</td>
+                                    <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
+                                    <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                            </table>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
     </div>
 </div>
 {% endblock content %}
