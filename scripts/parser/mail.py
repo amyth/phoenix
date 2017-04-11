@@ -339,6 +339,7 @@ class OpenLogParser(BaseLogFileParser):
             for camp, camp_obj in obj.iteritems():
                 for rec, rec_obj in camp_obj.iteritems():
                     for cid, cid_obj in rec_obj.iteritems():
+                        print date, rec, camp, cid, cid_obj
                         message = RecruiterMessages.objects.filter(
                                 date=self.get_date_object(date),
                                 campaign=camp,

@@ -63,6 +63,7 @@ class IndexView(TemplateView):
 
     def get_numbers(self, sdate=None, edate=None, cams=None, camp_id=None, uid=None):
 
+        allowed_cams = []
         restricted_campaigns = []
         results = []
         query_filter = {}
@@ -72,7 +73,6 @@ class IndexView(TemplateView):
 
         if cams:
             cams = cams.split(',')
-            allowed_cams = []
 
             for cam in cams:
                 if rules.test_rule('is_allowed_campaign', self.request.user, cam):
@@ -82,14 +82,14 @@ class IndexView(TemplateView):
 
             if restricted_campaigns:
                 django_messages.error(self.request, 'You do not have permission to access the mentioned campaign(s): %s' % ', '.join(restricted_campaigns))
-                query_filter['campaign__in'] = allowed_cams
             else:
                 admins = Group.objects.get(name='administrators')
                 if admins not in self.request.user.groups.all():
                     user_group = self.request.user.groups.first()
                     allowed_cams = settings.CAMPAIGN_PERMISSIONS.get(
                         user_group.name, [])
-                    query_filter['campaign__in'] = allowed_cams
+
+            query_filter['campaign__in'] = allowed_cams
 
         if sdate:
             if not edate:

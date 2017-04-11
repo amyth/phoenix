@@ -84,20 +84,20 @@ class BaseLogFileParser(object):
         if len(uidlist) > 3:
             return '|'.join([str(x) for x in [uidlist[1], uidlist[2], uidlist[3]]])
         else:
-
-            ## Base64 Decode
-            try:
-                campaign_id = base64.urlsafe_b64decode(str(uidlist[1]))
-                return campaign_id
-            except Exception as err
-                pass
-
             ## Fernet decode
             try:
                 fern = Fernet(settings.FERNET_DECRYPT_KEY)
                 campaign_id = fern.decrypt(uidlist[1])
+                print campaign_id
                 return campaign_id
             except InvalidToken as err:
+                pass
+
+            ## Base64 Decode
+            try:
+                campaign_id = str(unicode(base64.urlsafe_b64decode(str(uidlist[1]))))
+                return campaign_id
+            except Exception as err:
                 pass
 
         return uidlist[1]
