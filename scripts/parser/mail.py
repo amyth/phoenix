@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Wed Nov 16 17:05:28 2016
+# @last_modify: Mon Apr 24 16:17:21 2017
 ##
 ########################################
 
@@ -27,6 +27,7 @@ from mongoengine.errors import NotUniqueError
 
 from .core import BaseLogFileParser
 from apps.messages.documents import RecruiterMessages
+from backends.mongo import MongoBackend
 
 
 class MailLogParser(BaseLogFileParser):
@@ -34,7 +35,7 @@ class MailLogParser(BaseLogFileParser):
     def __init__(self, data_directory="/tmp", primary_tag="X-MailerTag",
             confirm_tag="removed", recruiter_tag="X-Uid", reply_tag="Reply-To",
             date_format="%b %d %Y", filepath="", workers=8, checkpoint=10000,
-            *args, **kwargs):
+            insert_backends=[MongoBackend], *args, **kwargs):
 
         self.data = {}
         self.filepath = filepath
@@ -50,6 +51,7 @@ class MailLogParser(BaseLogFileParser):
         self.date_format = date_format
 	self.checkpoint = checkpoint
 	self.inserting = False
+        self.insert_backends = [backend() for backend in insert_backends]
 
         #Regular expressions
         self.date_regex = r'\w{3}\s+\d{1,2}'
@@ -59,7 +61,7 @@ class MailLogParser(BaseLogFileParser):
         self.campaign_regex = r'[\wd]+-[\w\d]+:\s+([\w\d]+)'
         self.xuid_regex = r'[\wd]+-[\w\d]+:\s+([\w\d\-|\~\!\@\#\$\%\^\&\*\(\)\+\=\{\}\[\]\\\'\"\:\;\?\/\>\<\.\,\`]+)'
         self.reply_to_regex = r'Reply-To: ([\w\d@\.\-\_\/\+]+)'
-	self.mongo_data = {}
+	self.sf_data = {}
         self.final_data = []
         self.workers = workers
 	self.pcount = 0
@@ -71,46 +73,17 @@ class MailLogParser(BaseLogFileParser):
 	self.recruiter_log = open('/tmp/recruiter_log.txt', 'w')
 	self.confirm_log = open('/tmp/confirm_log.txt', 'w')
 
-    def _prepare(self):
-        """
-        Do all the preparation for parsing. Make it easier and quick.
-        """
-
-        ## create primary data file
-        primary = "%s-primary-sent.log" % uuid.uuid4().__str__()
-        primary = os.path.join(self.data_directory, primary)
-        os.system('cat %s | grep %s > %s' % (
-            self.filepath, self.primary_tag, primary
-        ))
-        self.primary_data_file = primary
-
-        ## create recruiter data file
-        recruiter = "%s-primary-recruiter.log" % uuid.uuid4().__str__()
-        recruiter = os.path.join(self.data_directory, recruiter)
-        os.system('cat %s | grep %s > %s' % (
-            self.filepath, self.recruiter_tag, recruiter
-        ))
-        self.recruiter_data_file = recruiter
-
-        ## create confirmation data file
-        confirm = "%s-primary-confirm.log" % uuid.uuid4().__str__()
-        confirm = os.path.join(self.data_directory, confirm)
-        os.system('cat %s | grep %s > %s' % (
-            self.filepath, self.confirm_tag, confirm
-        ))
-        self.sent_data_file = confirm
-
     def _confirm_send(self, line):
         try:
             message_id = re.findall(self.mid_regex, line)[0]
             if message_id in self.data:
-                self.push_to_mongo(message_id)
-
-	    #self.ccount += 1
-	    #print "%d/%d" % (self.ccount, self.ctotal)
+                data = self.data.get(message_id)
+                data["delivered"] = True
+                self.data[message_id] = data
+                self.push_data(message_id)
         except Exception as err:
-            ## Log the error with data
             print line, str(err)
+            #TODO: Implement logging and log the lines that throw an exception
 	    self.confirm_log.writelines(['%s, %s\n' % (line, err)])
 
     def _parse_message_info(self, line):
@@ -142,7 +115,7 @@ class MailLogParser(BaseLogFileParser):
         except Exception as err:
             ## Log the error with data
             print line, str(err)
-	    #self.mailer_tag_log.writelines(['%s %s\n' % (line, str(err))])
+	    self.mailer_tag_log.writelines(['%s %s\n' % (line, str(err))])
 
     def _get_recruiter_info(self, line):
 	try:
@@ -160,7 +133,7 @@ class MailLogParser(BaseLogFileParser):
     		    self.recruiter_log.writelines(['%s\n' % message_id])
 	except Exception as err:
             print line, str(err)
-	    #self.recruiter_log.writelines(['%s %s\n' % (line, str(err))])
+	    self.recruiter_log.writelines(['%s %s\n' % (line, str(err))])
 
 
     def parse_lines(self):
@@ -168,66 +141,33 @@ class MailLogParser(BaseLogFileParser):
         Parses a single line of log provided.
         """
 
-	#print "Parsing primary data\n"
-        #with open(self.primary_data_file, 'r') as pd_file:
-        #    lines = pd_file.readlines()
-	#    self.ptotal = len(lines)
-	#    self.pcount = 0
-        #    for line in lines:
-        #        self._parse_message_info(line)
-
-	#print "Parsing recruiter data\n"
-        #with open(self.recruiter_data_file, 'r') as rec_file:
-        #    lines = rec_file.readlines()
-	#    self.rtotal = len(lines)
-	#    self.rcount = 0
-	#    for line in lines:
-	#	self._get_recruiter_info(line)
-
-	#print "Processing ... \n"
-        #with open(self.sent_data_file, 'r') as co_file:
-        #    lines = co_file.readlines()
-	#    self.ctotal = len(lines)
-	#    self.ccount = 0
-        #    for line in lines:
-        #        self._confirm_send(line)
 	print "Parsing Data ..."
 	lines = self.log_file.readlines()
     	for line in lines:
 	    if self.primary_tag in line:
 	    	self._parse_message_info(line)
-	    elif self.recruiter_tag in line:
+	    if self.recruiter_tag in line:
 	    	self._get_recruiter_info(line)
- 	    elif self.confirm_tag in line:
+ 	    if self.confirm_tag in line:
 	    	self._confirm_send(line)
 
     def parse(self):
         if self.log_file:
-            #self._prepare()
             self.parse_lines()
 	    self._insert()
             self._cleanup()
 	return None
 
     def _insert(self):
-        print "Inserting message objects"
-        for date, date_obj in self.mongo_data.iteritems():
-            for camp, camp_obj in date_obj.iteritems():
-                for rec, rec_obj in camp_obj.iteritems():
-                    for cid, cid_obj in rec_obj.iteritems():
-                        obj = RecruiterMessages(recruiter=rec,
-                                date=self.get_date_object(date),
-                                campaign=camp,
-                                campaign_id=cid,
-                                sent=cid_obj.get('sent', 0)
-                                )
-                        self.final_data.append(obj)
 
-	self.mongo_data.clear()
-        RecruiterMessages.objects.insert(self.final_data)
-	del self.final_data[:]
+        for backend in self.insert_backends:
+            backend.insert_sents(self.sf_data)
 
-    def push_to_mongo(self, mid):
+	self.sf_data.clear()
+	del self.sf_data
+        return None
+
+    def push_data(self, mid):
 
         data = self.data.get(mid)
         date = data.get('sent_at')
@@ -235,7 +175,7 @@ class MailLogParser(BaseLogFileParser):
         campaign_id = data.get('campaign_id', 'nocampaignid')
         recruiter_id = data.get('recruiter_id', 'norecruiterid')
 
-        date_data = self.mongo_data.get(date, {})
+        date_data = self.sf_data.get(date, {})
         camp_data = date_data.get(campaign, {})
         reid_data = camp_data.get(recruiter_id, {})
         caid_data = reid_data.get(campaign_id, {})
@@ -243,11 +183,10 @@ class MailLogParser(BaseLogFileParser):
         reid_data[campaign_id] = caid_data
         camp_data[recruiter_id] = reid_data
         date_data[campaign] = camp_data
-        self.mongo_data[date] = date_data
+        self.sf_data[date] = date_data
 
 	if campaign == "sendJob":
 	    self.confirm_log.writelines(['%s\n' % mid])
-	    
 
         del self.data[mid]
 
@@ -255,7 +194,8 @@ class MailLogParser(BaseLogFileParser):
 class OpenLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            workers=4, *args, **kwargs):
+            workers=4, insert_backends=[MongoBackend],
+            *args, **kwargs):
 
         self.filepath = filepath
         self.data = {}
@@ -270,6 +210,7 @@ class OpenLogParser(BaseLogFileParser):
 	todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
 	self.open_data_file = open('/tmp/%s_open_data.log' % todays_date, 'w')
         self.workers = workers
+        self.insert_backends = [backend() for backend in insert_backends]
 
     def parse(self):
         if self.log_file:
@@ -334,31 +275,18 @@ class OpenLogParser(BaseLogFileParser):
             #raise
 
     def update_open_status(self):
-        print "Updating opened status\n"
-        for date, obj in self.data.iteritems():
-            for camp, camp_obj in obj.iteritems():
-                for rec, rec_obj in camp_obj.iteritems():
-                    for cid, cid_obj in rec_obj.iteritems():
-                        print date, rec, camp, cid, cid_obj
-                        message = RecruiterMessages.objects.filter(
-                                date=self.get_date_object(date),
-                                campaign=camp,
-                                recruiter=rec,
-                                campaign_id=cid
-                                ).first()
-                        if message:
-			    if message.opened:
-                            	message.opened = message.opened + cid_obj.get('opened')
-			    else:
-                            	message.opened = cid_obj.get('opened')
-                            message.save()
+        for backend in self.insert_backends:
+            backend.insert_opens(self.data)
+
 	self.data.clear()
+        del self.data
+        return None
 
 
 class ClickLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            primary_tag="etm_content",
+            primary_tag="etm_content", insert_backends=[MongoBackend],
             workers=4, *args, **kwargs):
 
         self.filepath = filepath
@@ -378,6 +306,7 @@ class ClickLogParser(BaseLogFileParser):
 
         self.log_file = open(self.filepath, 'r')
         self.workers = workers
+        self.insert_backends = [backend() for backend in insert_backends]
 
     def _cleanup(self):
         super(ClickLogParser, self)._cleanup()
@@ -475,22 +404,9 @@ class ClickLogParser(BaseLogFileParser):
             self.errors += 1
 
     def update_click_status(self):
-        print "Updating click status\n"
-        for date, obj in self.data.iteritems():
-            for camp, camp_obj in obj.iteritems():
-                for rec, rec_obj in camp_obj.iteritems():
-                    for cid, cid_obj in rec_obj.iteritems():
-                        message = RecruiterMessages.objects.filter(
-                                date=self.get_date_object(date),
-                                campaign=camp,
-                                recruiter=rec,
-                                campaign_id=cid
-                                ).first()
-                        if message:
-			    if message.clicked:
-                            	message.clicked = message.clicked + cid_obj.get('clicked')
-			    else:
-                            	message.clicked = cid_obj.get('clicked')
-                            message.save()
+        for backend in self.insert_backends:
+            backend.insert_clicks(self.data)
 
 	self.data.clear()
+        del self.data
+        return None
