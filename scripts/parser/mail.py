@@ -262,6 +262,7 @@ class OpenLogParser(BaseLogFileParser):
         self.date_format = date_format
 
         #Regular expressions
+        self.action_time_regex = r'(\d{0,2}\/\w{3,3}\/\d+\:\d+\:\d+\:\d+)'
         self.date_regex = r'[\d]+\/[\w]+\/[\d]+'
         self.qs_regex = r'/media/images/dot.gif\?([\w\d=&.@\/\_\-\+\|\%\:]+)'
 	self.uemail_regex = r'user_email=([\w\d\+\_\/\=\\\-]+)'
@@ -323,9 +324,12 @@ class OpenLogParser(BaseLogFileParser):
             camp_data[recruiter_id] = recr_data
             date_data[campaign] = camp_data
 
+            ac_time = re.findall(self.action_time_regex, line)
+            ac_time = ac_time[0] if ac_time else ""
+
             self.data[cdate] = date_data
-            self.open_data_file.writelines(['%s %s %s %s %s\n' % (cdate, campaign,
-                    self.get_normalized_email(user_email), campaign_id, recruiter_id)])
+            self.open_data_file.writelines(['%s %s %s %s %s (%s)\n' % (cdate, campaign,
+                    self.get_normalized_email(user_email), campaign_id, recruiter_id, ac_time)])
             self.prog += 1
             print "%s/%s" % (self.prog, self.total)
         except Exception as err:
@@ -369,8 +373,10 @@ class ClickLogParser(BaseLogFileParser):
         self.data_directory = data_directory
 
         #Regular expressions
+        self.action_time_regex = r'^(\w{3,3}\s{0,2}\d{0,2}\s\d+\:\d+\:\d+)'
         self.date_regex = r'\w{3}\s+\d{1,2}'
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?\|\@]+)'
+        self.job_url_regex = r'myshine/jobs/[(\w\d\-\_\\\/)]+'
 
         if 'ClickLogParser' in str(self.__class__):
             todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
@@ -465,8 +471,20 @@ class ClickLogParser(BaseLogFileParser):
             self.data[cdate] = date_data
             self.prog += 1
 
-	    self.click_data_file.writelines(['%s %s %s %s %s\n' % (cdate, campaign,
-		    user_email, campaign_id, recruiter_id)])
+
+            ac_time = re.findall(self.action_time_regex, line)
+            ac_time = ac_time[0] if ac_time else ""
+
+            ## Add job id to click log file
+            job_id = ""
+            if 'myshine/jobs' in line:
+                job_url = re.findall(self.job_url_regex, line)
+                if len(job_url):
+                    job_id = re.findall(r'[(\d)]+', job_url)
+                    job_id = job_id[0] if job_id else ""
+
+	    self.click_data_file.writelines(['%s %s %s %s %s %s (%s)\n' % (cdate, campaign,
+		    user_email, campaign_id, recruiter_id, job_id, ac_time)])
 
             print "%s/%s" % (self.prog, self.total)
         except Exception as err:
