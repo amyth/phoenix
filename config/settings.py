@@ -142,7 +142,6 @@ ADMIN_MEDIA_PREFIX = '/static/'
 LOGIN_REDIRECT_URL = '/'
 FERNET_DECRYPT_KEY = 'F8lZb_92t4prgjLRIgIkdA5_2XSX-h0aPnElWROUyTA='
 
-
 #MYSQL_PARSER_SETTINGS = {
 #    'host': '172.22.67.126',
 #    'port': 3306,

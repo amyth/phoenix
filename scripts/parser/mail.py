@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Thu May 11 14:08:38 2017
+# @last_modify: Thu May 11 14:09:48 2017
 ##
 ########################################
 
@@ -36,7 +36,7 @@ class MailLogParser(BaseLogFileParser):
     def __init__(self, data_directory="/tmp", primary_tag="X-MailerTag",
             confirm_tag="removed", recruiter_tag="X-Uid", reply_tag="Reply-To",
             date_format="%b %d %Y", filepath="", workers=8, checkpoint=10000,
-            insert_backends=[MySQLMergeBackend], *args, **kwargs):
+            insert_backends=[MongoBackend], *args, **kwargs):
 
         self.data = {}
         self.filepath = filepath
@@ -195,7 +195,7 @@ class MailLogParser(BaseLogFileParser):
 class OpenLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            workers=4, insert_backends=[MySQLMergeBackend],
+            workers=4, insert_backends=[MongoBackend],
             *args, **kwargs):
 
         self.filepath = filepath
@@ -291,7 +291,7 @@ class OpenLogParser(BaseLogFileParser):
 class ClickLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            primary_tag="etm_content", insert_backends=[MySQLMergeBackend],
+            primary_tag="etm_content", insert_backends=[MongoBackend],
             workers=4, *args, **kwargs):
 
         self.filepath = filepath
@@ -307,6 +307,7 @@ class ClickLogParser(BaseLogFileParser):
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?\|\@]+)'
         self.pa_string = 'primaryAction'
         self.job_url_regex = r'myshine/jobs/[(\w\d\-\_\\\/)]+'
+        self.pa_string = 'primaryAction'
 
         if 'ClickLogParser' in str(self.__class__):
             todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
