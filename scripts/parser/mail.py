@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Mon Apr 24 16:17:21 2017
+# @last_modify: Wed May  3 16:16:09 2017
 ##
 ########################################
 
@@ -28,6 +28,7 @@ from mongoengine.errors import NotUniqueError
 from .core import BaseLogFileParser
 from apps.messages.documents import RecruiterMessages
 from backends.mongo import MongoBackend
+from backends.mysql import MySQLMergeBackend
 
 
 class MailLogParser(BaseLogFileParser):
@@ -35,7 +36,7 @@ class MailLogParser(BaseLogFileParser):
     def __init__(self, data_directory="/tmp", primary_tag="X-MailerTag",
             confirm_tag="removed", recruiter_tag="X-Uid", reply_tag="Reply-To",
             date_format="%b %d %Y", filepath="", workers=8, checkpoint=10000,
-            insert_backends=[MongoBackend], *args, **kwargs):
+            insert_backends=[MySQLMergeBackend], *args, **kwargs):
 
         self.data = {}
         self.filepath = filepath
@@ -194,7 +195,7 @@ class MailLogParser(BaseLogFileParser):
 class OpenLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            workers=4, insert_backends=[MongoBackend],
+            workers=4, insert_backends=[MySQLMergeBackend],
             *args, **kwargs):
 
         self.filepath = filepath
@@ -286,7 +287,7 @@ class OpenLogParser(BaseLogFileParser):
 class ClickLogParser(BaseLogFileParser):
 
     def __init__(self, filepath, data_directory="/tmp", date_format="%d/%b/%Y",
-            primary_tag="etm_content", insert_backends=[MongoBackend],
+            primary_tag="etm_content", insert_backends=[MySQLMergeBackend],
             workers=4, *args, **kwargs):
 
         self.filepath = filepath
@@ -299,6 +300,7 @@ class ClickLogParser(BaseLogFileParser):
         #Regular expressions
         self.date_regex = r'\w{3}\s+\d{1,2}'
         self.qs_regex = r'[\?]([\w\d\=\&\/\-\_\.\%\:\+\?\|\@]+)'
+        self.pa_string = 'primaryAction'
 
         if 'ClickLogParser' in str(self.__class__):
             todays_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime('%d_%b_%Y')
@@ -377,7 +379,6 @@ class ClickLogParser(BaseLogFileParser):
                 campaign_id = self.get_campaign_id(tid)
                 recruiter_id = tid[-1]
 
-
             data['campaign_id'] = campaign_id
             data['recruiter_id'] = recruiter_id
 
@@ -387,6 +388,10 @@ class ClickLogParser(BaseLogFileParser):
             caid_data = recr_data.get(campaign_id, {})
 
             caid_data['clicked'] = caid_data.get('clicked', 0) + 1
+
+            if self.pa_string in line:
+                caid_data['primary_action'] = 1
+
             recr_data[campaign_id] = caid_data
             camp_data[recruiter_id] = recr_data
             date_data[campaign] = camp_data

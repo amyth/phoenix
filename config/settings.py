@@ -143,11 +143,18 @@ LOGIN_REDIRECT_URL = '/'
 FERNET_DECRYPT_KEY = 'F8lZb_92t4prgjLRIgIkdA5_2XSX-h0aPnElWROUyTA='
 
 
+#MYSQL_PARSER_SETTINGS = {
+#    'host': '172.22.67.126',
+#    'port': 3306,
+#    'username': 'phoenix',
+#    'password': 'Phoenix@313',
+#    'database': 'phoenix_dev'
+#}
 MYSQL_PARSER_SETTINGS = {
-    'host': '172.22.67.126',
+    'host': '127.0.0.1',
     'port': 3306,
-    'username': 'phoenix',
-    'password': 'Phoenix@313',
+    'username': 'root',
+    'password': 'Puresy307',
     'database': 'phoenix_dev'
 }
 

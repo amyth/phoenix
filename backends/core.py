@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 01-03-2017
-# @last_modify: Mon Apr 24 16:28:33 2017
+# @last_modify: Wed May  3 15:58:37 2017
 ##
 ########################################
 
@@ -23,7 +23,13 @@ class BaseBackend(object):
         pass
 
     def get_date_object(self, date):
-        return datetime.datetime.strptime(date, '%b %d %Y')
+        try:
+            return datetime.datetime.strptime(date, '%b %d %Y')
+        except Exception as err:
+            #TODO: log unsuccessful datetime conversion
+            print "Could not convert datetime for %s with pattern (b d Y)" % date
+
+        return None
 
     def insert_sents(self):
         raise NotImplementedError('`insert_sents` method for this backend is not defined.')
