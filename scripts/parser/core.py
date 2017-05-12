@@ -7,7 +7,7 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 03-10-2016
-# @last_modify: Wed Nov 16 17:02:29 2016
+# @last_modify: Fri May 12 14:09:42 2017
 ##
 ########################################
 
@@ -88,7 +88,6 @@ class BaseLogFileParser(object):
             try:
                 fern = Fernet(settings.FERNET_DECRYPT_KEY)
                 campaign_id = fern.decrypt(uidlist[1])
-                print campaign_id
                 return campaign_id
             except InvalidToken as err:
                 pass
