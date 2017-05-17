@@ -66,6 +66,8 @@ target/
 
 ## templ
 temp/
+logs/
+config/logs/
 
 ## DB
 db.*
