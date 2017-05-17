@@ -7,11 +7,12 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 06-10-2016
-# @last_modify: Wed Nov 16 13:58:49 2016
+# @last_modify: Wed May 17 13:10:24 2017
 ##
 ########################################
 
 import datetime
+import logging
 import os
 import subprocess
 
@@ -20,6 +21,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from scripts.parser.mail import MailLogParser
 
+logger = logging.getLogger('critical')
 
 class Command(BaseCommand):
 
@@ -50,8 +52,11 @@ class Command(BaseCommand):
 		script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
 		subprocess.call([script, f])
 		f = f[:-3]
-            parser = MailLogParser(filepath=f)
-            parser.parse()
+            try:
+                parser = MailLogParser(filepath=f)
+                parser.parse()
+            except Exception as err:
+                logger.exception(err)
 
         print "All done"
 
