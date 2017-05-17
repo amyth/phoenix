@@ -396,7 +396,7 @@ class ClickLogParser(BaseLogFileParser):
             caid_data['clicked'] = caid_data.get('clicked', 0) + 1
 
             if self.pa_string in line:
-                caid_data['primary_action'] = 1
+                caid_data['primary_action'] = caid_data.get('primary_action', 0) + 1
 
             recr_data[campaign_id] = caid_data
             camp_data[recruiter_id] = recr_data
