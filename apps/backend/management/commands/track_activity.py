@@ -7,11 +7,12 @@
 # @email:           mail@amythsingh.com
 # @website:         www.techstricks.com
 # @created_date: 06-10-2016
-# @last_modify: Wed Nov 16 13:59:07 2016
+# @last_modify: Wed May 17 13:42:09 2017
 ##
 ########################################
 
 import datetime
+import logging
 import os
 import subprocess
 
@@ -22,6 +23,9 @@ from scripts.parser.mail import (
         OpenLogParser,
         ClickLogParser
 )
+
+
+logger = logging.getLogger('critical')
 
 
 class Command(BaseCommand):
@@ -84,8 +88,11 @@ class Command(BaseCommand):
                 script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
                 subprocess.call([script, f])
                 f = f[:-3]
-            parser = OpenLogParser(filepath=f)
-            parser.parse()
+            try:
+                parser = OpenLogParser(filepath=f)
+                parser.parse()
+            except Exception as err:
+                logger.exception(err)
 
     def track_clicks(self):
         files = self.get_click_log_files()
@@ -94,8 +101,11 @@ class Command(BaseCommand):
                 script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
                 subprocess.call([script, f])
                 f = f[:-3]
-            parser = ClickLogParser(filepath=f)
-            parser.parse()
+            try:
+                parser = ClickLogParser(filepath=f)
+                parser.parse()
+            except Exception as err:
+                logger.exception(err)
 
     def get_open_log_files(self):
         """
