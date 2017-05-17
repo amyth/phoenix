@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 
 import os
 from campaign_permissions import *
+from .log_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '@-76h9fd9r5j&n1jk+_3zqn@1^e^=a272m0*+20xnwm72rdq4%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -156,6 +157,21 @@ MYSQL_PARSER_SETTINGS = {
     'password': 'Puresy307',
     'database': 'phoenix_dev'
 }
+
+##### EMAIL SETTINGS ##################################
+
+ADMINS = (
+    ('Amyth', 'aroras.official@gmail.com'),
+)
+EMAIL_HOST = '172.22.65.55'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
+SERVER_EMAIL = 'Phoenix <phoenix@shine.com>'
+DEFAULT_FROM_EMAIL = SERVER_EMAIL
+
+#######################################################
 
 
 try:
