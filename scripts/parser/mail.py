@@ -414,7 +414,7 @@ class ClickLogParser(BaseLogFileParser):
             if 'myshine/jobs' in line:
                 job_url = re.findall(self.job_url_regex, line)
                 if len(job_url):
-                    job_id = re.findall(r'[(\d)]+', job_url)
+                    job_id = re.findall(r'[(\d)]+', job_url[0])
                     job_id = job_id[0] if job_id else ""
 
 	    self.click_data_file.writelines(['%s %s %s %s %s %s (%s)\n' % (cdate, campaign,
