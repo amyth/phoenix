@@ -80,6 +80,7 @@ class MongoBackend(BaseBackend):
                             	message.clicked = message.clicked + cid_obj.get('clicked')
 			    else:
                             	message.clicked = cid_obj.get('clicked')
+                                message.primary_clicks = cid_obj.get('primary_action', 0)
                             message.save()
 
 	print "Clicks successfully updated in mongoDB\n"

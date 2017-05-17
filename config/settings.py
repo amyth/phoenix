@@ -27,7 +27,7 @@ SECRET_KEY = '@-76h9fd9r5j&n1jk+_3zqn@1^e^=a272m0*+20xnwm72rdq4%'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['phoenix.shine.com']
 
 
 # Application definition
@@ -162,6 +162,9 @@ MYSQL_PARSER_SETTINGS = {
 
 ADMINS = (
     ('Amyth', 'aroras.official@gmail.com'),
+    ('Vijay', 'vijay.mendiratta@hindustantimes.com'),
+    ('Ishank', 'ishank.mahana@hindustantimes.com'),
+    ('Tanvi', 'tanvi.arora@hindustantimes.com'),
 )
 EMAIL_HOST = '172.22.65.55'
 EMAIL_PORT = 25
