@@ -13,6 +13,7 @@
 
 from collections import OrderedDict
 import datetime
+import logging
 import operator
 from itertools import groupby
 
@@ -30,6 +31,9 @@ from apps.messages.documents import RecruiterMessages
 from .predicates import is_allowed_campaign
 
 import rules
+
+
+logger = logging.getLogger('main')
 
 class IndexView(TemplateView):
 
@@ -67,6 +71,10 @@ class IndexView(TemplateView):
         restricted_campaigns = []
         results = []
         query_filter = {}
+
+        # restrict campaigns
+        if (not cams) and (self.request.user) and (self.request.user.username in settings.RESTRICTED_USERS):
+            cams = 'sendJob'
 
         sdate = self.format_date(sdate) if sdate else datetime.datetime.now() + datetime.timedelta(days=-1)
         edate = self.format_date(edate) if edate else None
@@ -108,6 +116,8 @@ class IndexView(TemplateView):
         if uid:
             query_filter['recruiter'] = uid
 
+
+        logger.debug(query_filter)
         message_qs = RecruiterMessages.objects.filter(**query_filter)
         messages = list(message_qs)
         sent = sum([x.sent for x in messages if x.sent])

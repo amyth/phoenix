@@ -12,7 +12,6 @@
 ########################################
 
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -25,7 +24,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class':'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/phoenix.log',
+            'filename': '/var/log/phoenix.log',
             'maxBytes': 1024*1024*5, # 5 MB
             'backupCount': 5,
         },
