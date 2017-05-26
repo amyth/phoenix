@@ -25,4 +25,4 @@ class RecruiterMessages(mongoengine.Document):
     sent = mongoengine.IntField()
     opened = mongoengine.IntField()
     clicked = mongoengine.IntField()
-    primary_clicks = mongoengine.IntField()
+    primary_clicks = mongoengine.IntField(default=0)

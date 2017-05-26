@@ -99,6 +99,7 @@
                                     <th>Sent</th>
                                     <th>Opened</th>
                                     <th>Clicked</th>
+                                    <th>Primary</th>
                                 </tr>
                         </thead>
                         <tbody>
@@ -108,6 +109,7 @@
                             <td>{{ nums.sent }}</td>
                             <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
                             <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
+                            <td>{% if nums.primary_clicks %}{{ nums.primary_clicks }}{% else %}N/A{% endif %}</td>
                         </tr>
                         {% endfor %}
                         </tbody>
@@ -123,6 +125,7 @@
                                         <th>Sent</th>
                                         <th>Opened</th>
                                         <th>Clicked</th>
+                                        <th>Primary</th>
                                     </tr>
                             </thead>
                             <tbody>
@@ -132,6 +135,7 @@
                                     <td>{{ nums.sent }}</td>
                                     <td>{{ nums.opened }} <strong>(Sent to opened: {% widthratio nums.opened nums.sent 100 %}%)</strong></td>
                                     <td>{{ nums.clicked }} <strong>(Sent to clicked: {% widthratio nums.clicked nums.sent 100 %}%), (Opened to clicked: {% widthratio nums.clicked nums.opened 100 %}%)</strong></td>
+                                    <td>{% if nums.primary_clicks %}{{ nums.primary_clicks }}{% else %}N/A{% endif %}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
