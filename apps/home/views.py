@@ -117,7 +117,7 @@ class IndexView(TemplateView):
             query_filter['recruiter'] = uid
 
 
-        logger.debug(query_filter)
+        #logger.debug(query_filter)
         message_qs = RecruiterMessages.objects.filter(**query_filter)
         messages = list(message_qs)
         sent = sum([x.sent for x in messages if x.sent])
@@ -260,10 +260,12 @@ class TrackAds(TemplateView):
         if tracking_id:
             query_filter['tracking_id'] = tracking_id
 
-        adverts = list(Advert.objects.filter(**query_filter))
+        adverts = list(Advert.objects.filter(**query_filter).order_by('-date'))
         get_attr = operator.attrgetter('date')
         results = {k.strftime('%d %b %Y'): list(g) for k, g in groupby(
             sorted(adverts, key=get_attr), get_attr)}
+
+        results = OrderedDict(sorted(results.items(), key=lambda x: x[0]))
 
         return results
 
