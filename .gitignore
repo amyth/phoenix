@@ -68,6 +68,7 @@ target/
 temp/
 logs/
 config/logs/
+config/personal.py
 
 ## DB
 db.*
