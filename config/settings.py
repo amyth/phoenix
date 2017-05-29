@@ -178,6 +178,14 @@ DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
 
 try:
+    from .personal import *
+except ImportError as err:
+    # Personal settings file does not exist
+    # Skip and use generic settings.
+    pass
+
+
+try:
     import mongoengine
     mongoengine.connect(MONGO_SETTINGS['database'])
 except ImportError:
