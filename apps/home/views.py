@@ -157,6 +157,7 @@ class IndexView(TemplateView):
                     'sent': sum([x.sent for x in filtered if x.sent]),
                     'opened': sum([x.opened for x in filtered if x.opened]),
                     'clicked': sum([x.clicked for x in filtered if x.clicked]),
+                    'primary_clicks': sum([x.primary_clicks for x in filtered if x.primary_clicks])
                 }
 
             results.append({'datewise': dw_results})

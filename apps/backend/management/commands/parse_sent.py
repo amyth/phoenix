@@ -49,10 +49,10 @@ class Command(BaseCommand):
         self.import_files(**kwargs)
         files = self.get_log_files()
         for f in files:
-	    if f.endswith('.gz'):
-		script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
-		subprocess.call([script, f])
-		f = f[:-3]
+            if f.endswith('.gz'):
+                script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
+                subprocess.call([script, f])
+                f = f[:-3]
             try:
                 parser = MailLogParser(filepath=f)
                 parser.parse()
