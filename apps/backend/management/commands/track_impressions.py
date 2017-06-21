@@ -18,7 +18,7 @@ import subprocess
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from scripts.parser.adverts import AdvertClickParser
+from scripts.parser.adverts import ImpressionsParser
 
 
 class Command(BaseCommand):
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 script = os.path.join(settings.BASE_DIR, "scripts/bash/unzip_files.sh")
                 subprocess.call([script, f])
                 f = f[:-3]
-            parser = AdvertClickParser(filepath=f)
+            parser = ImpressionsParser(filepath=f)
             parser.parse()
 
         print "All done"

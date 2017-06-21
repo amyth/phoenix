@@ -200,6 +200,7 @@ table.u-full-width.datewise {
 .navbar-item {
     margin-top: 10px;
     display: inline-block;
+    margin-left: 8px;
 }
 .navbar-item.logo {
     margin-top: 0;
@@ -280,4 +281,21 @@ h4.campaign_id span {
     background: #eaf3cb;
     padding: 8px;
     border-radius: 4px;
+}
+.navbar-item span.label {
+    position: relative;
+    top: -15px;
+    left: -30px;
+    font-size: 8px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: white;
+    background: #33C3F0;
+    padding: 2px 4px;
+    border-radius: 2.5px;
+}
+
+.navbar-item span.label.green {
+    color: #55941f;
+    background: #c1f033;
 }

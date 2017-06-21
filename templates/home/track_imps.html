@@ -1,0 +1,87 @@
+{% extends 'layouts/base.html' %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div class="container">
+    <!-- messages -->
+    {% include 'layouts/partials/messages.html' %}
+
+    <div class="form-container">
+        <form id="track_ads_form" method="POST">
+            {% csrf_token %}
+
+            <div class="row">
+                <div class="six columns">
+                    <input type="text" name="start_date" id="start_date" placeholder="Select a start date" {% if selected_data.start_date %}value="{{selected_data.start_date}}"{% endif %}/>
+                </div>
+                <div class="six columns">
+                    <input type="text" name="end_date" id="end_date" placeholder="Select the end date" {% if selected_data.end_date %}value="{{selected_data.end_date}}"{% endif %}/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="twelve columns">
+                    <input type="text" name="tracking_id" id="tracking_id" placeholder="Enter unique tracking id / company id" {% if selected_data.tracking_id %}value="{{selected_data.tracking_id}}"{% endif %}/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve columns">
+                    <input type="text" name="tracking_source" id="tracking_source" placeholder="Tracking source" {% if selected_data.tracking_source %}value="{{selected_data.tracking_source}}"{% endif %}/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve columns">
+                    <input type="text" name="tracking_medium" id="tracking_medium" placeholder="Tracking medium" {% if selected_data.tracking_medium %}value="{{selected_data.tracking_medium}}"{% endif %}/>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve columns">
+                    <input type="text" name="tracking_drive" id="tracking_drive" placeholder="Tracking drive" {% if selected_data.tracking_drive %}value="{{selected_data.tracking_drive}}"{% endif %}/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="four columns">
+                    <button type="submit" class="button button-primary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div> 
+
+    <!-- Main Data -->
+    <div class="main-data">
+        {% if main_data %}
+            {% for dte, results in main_data.iteritems %}
+            <div class="table-top">
+                <span class="date">{{ dte }}</span>
+                <span class="number">{{ total_count }}</span><span> Impression(s)</span>
+            </div>
+            <table class="u-full-width datewise singl-table">
+                <thead>
+                    <tr>
+                        <th>Tracking ID</th>
+                        <th>Source</th>
+                        <th>Medium</th>
+                        <th>Drive</th>
+                        <th>Impressions</th>
+                    </tr>
+                    <tbody>
+                        {% for advert in results %}
+                            <tr>
+                                <td>{{ advert.tracking_id }}</td>
+                                <td>{{ advert.tracking_source }}</td>
+                                <td>{{ advert.tracking_medium }}</td>
+                                <td>{{ advert.tracking_drive }}</td>
+                                <td>{{ advert.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </thead>
+            </table>
+            {% endfor %}
+        {% else %}
+            <p class="no-data">Sorry, No data found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

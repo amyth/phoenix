@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '@-76h9fd9r5j&n1jk+_3zqn@1^e^=a272m0*+20xnwm72rdq4%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['phoenix.shine.com', '*']
 
