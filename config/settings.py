@@ -163,7 +163,7 @@ MYSQL_PARSER_SETTINGS = {
 ADMINS = (
     ('Amyth', 'aroras.official@gmail.com'),
     ('Vijay', 'vijay.mendiratta@hindustantimes.com'),
-    ('Ishank', 'ishank.mahana@hindustantimes.com'),
+    ('Ishank', 'ishank.mahna@hindustantimes.com'),
     ('Tanvi', 'tanvi.arora@hindustantimes.com'),
 )
 EMAIL_HOST = '172.22.65.55'
