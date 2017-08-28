@@ -328,7 +328,7 @@ class ClickLogParser(BaseLogFileParser):
         ## create primary data file
         primary = "%s.log" % uuid.uuid4().__str__()
         primary = os.path.join(self.data_directory, primary)
-        os.system('cat %s | grep %s | grep utm_campaign| grep -v "myshine/login" | grep -v "appParams" > %s' % (
+        os.system('cat %s | grep %s | grep utm_campaign| grep -v "myshine/login" > %s' % (
             self.filepath, self.primary_tag, primary
         ))
         self.primary_data_file = primary

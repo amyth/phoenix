@@ -24,3 +24,14 @@ fi
 # copy from log server
 scp root@${logServer}:${netMagicSMTPLogFileOrg} /data/logs/
 scp root@${logServer}:${amazonSMTPLogFileOrg} /data/logs/
+
+# unzip and filter
+gunzip /data/logs/*.gz
+
+for mfile in /data/logs/*; do
+    fname=$(echo $mfile | cut -d '/' -f4)
+    cat "${mfile}" | grep -w "X-Uid\|X-MailerTag\|removed" > "/data/tmp/${fname}.plog"
+    rm "$mfile"
+done;
+mv /data/tmp/* /data/logs/
+echo "Mailer files prepared."
