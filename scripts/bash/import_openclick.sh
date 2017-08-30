@@ -14,9 +14,11 @@ openServer="172.22.65.135"
 
 apacheLogFileOrg="/var/log/httpd-access/httpd-access.log-${Yesterday}*"
 apacheRecruiterLogFileOrg="/var/log/httpd-access/httpd-recruiter-access.log-${Yesterday}*"
+apacheBackofficeLogFileOrg="/var/log/bakoffice/http-access/httpd-access.log-${Yesterday}*"
 openLogFile="/var/log/nginx/trackOpen.log-${Yesterday}*"
 
 # copy from log server
 scp root@${logServer}:${apacheLogFileOrg} /data/logs/
 scp root@${logServer}:${apacheRecruiterLogFileOrg} /data/logs/
+scp root@${logServer}:${apacheBackofficeLogFileOrg} /data/logs/back/
 scp root@${openServer}:${openLogFile} /data/logs/

@@ -123,10 +123,14 @@ class Command(BaseCommand):
         """
         Returns the filepaths to be processed.
         """
-        files = []
-        file_list = os.listdir(settings.LOG_DATA_DIR)
-        for x in file_list:
-            if x.startswith('httpd'):
-                name = os.path.abspath(os.path.join(settings.LOG_DATA_DIR, x))
-                files.append(name)
+        files = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(settings.LOG_DATA_DIR)) for f in fn if 'httpd' in f]
+        ##TODO: get recursive files in data directory.
+        ## this is to be done to make sure we can parse
+        ## files with similar names.
+        #files = []
+        #file_list = os.listdir(settings.LOG_DATA_DIR)
+        #for x in file_list:
+        #    if x.startswith('httpd'):
+        #        name = os.path.abspath(os.path.join(settings.LOG_DATA_DIR, x))
+        #        files.append(name)
         return files
