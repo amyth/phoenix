@@ -176,6 +176,8 @@ DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
 #######################################################
 
+JOBVIEWS_DUMP_PATH = '/shine_media/site/static2/media1/jobviews'
+
 
 try:
     from .personal import *
