@@ -34,7 +34,7 @@ class JobViewParser(ClickLogParser):
         try:
             jid_data = re.findall(r'&jid=(\d+)', line)
             if jid_data:
-                if jid_data[0] in data:
+                if jid_data[0] in self.data:
                     self.data[jid_data[0]] += 1
                 else:
                     self.data[jid_data[0]] = 1

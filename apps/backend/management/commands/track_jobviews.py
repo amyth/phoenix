@@ -58,7 +58,7 @@ class Command(BaseCommand):
     def import_files(self, **kwargs):
 	start_date = kwargs.get('start_date')
 	end_date = kwargs.get('end_date')
-	script_comm = "scripts/bash/import_apache.sh"
+	script_comm = "scripts/bash/import_mylogger.sh"
         script = os.path.join(settings.BASE_DIR, script_comm)
 	#_amz = kwargs.get('amz_date')
 
@@ -90,7 +90,7 @@ class Command(BaseCommand):
         files = []
         file_list = os.listdir(settings.LOG_DATA_DIR)
         for x in file_list:
-            if x.startswith('access'):
+            if x.startswith('mylogger'):
                 name = os.path.abspath(os.path.join(settings.LOG_DATA_DIR, x))
                 files.append(name)
         return files
